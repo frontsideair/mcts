@@ -1,7 +1,6 @@
--- import Game
 import           MCTS
 
 main :: IO ()
 main = do
-  bestMove <- runMCTS
-  print bestMove
+  tree <- runMCTSTimeout 10 initialGameTree
+  print $ robustChild tree

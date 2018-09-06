@@ -1,13 +1,13 @@
 module TicTacToe
-  ( Game(_turn)
+  ( Game
   , Move
   , Player
   , Result(Win, Draw)
   , initialGame
-  , moves
+  , legalMoves
+  , turn
   , play
-  , result
-  , isTerminal
+  , gameResult
   )
 where
 
@@ -28,6 +28,9 @@ type Move = Position
 
 data Result = Win Player | Draw deriving Show
 
+turn :: Game -> Player
+turn = _turn
+
 initialBoard :: Board
 initialBoard = M.fromList 3 3 (repeat Nothing)
 
@@ -39,10 +42,10 @@ toggle X = O
 toggle O = X
 
 isTerminal :: Game -> Bool
-isTerminal = isJust . result
+isTerminal = isJust . gameResult
 
-moves :: Game -> [Move]
-moves game@(Game board _) =
+legalMoves :: Game -> [Move]
+legalMoves game@(Game board _) =
   if isTerminal game then [] else emptyPositions board
 
 emptyPositions :: Board -> [Position]
@@ -55,8 +58,8 @@ play :: Move -> Game -> Game
 play position (Game board player) =
   Game (M.setElem (Just player) position board) (toggle player)
 
-result :: Game -> Maybe Result -- TODO: not ideal
-result (Game board _) =
+gameResult :: Game -> Maybe Result -- TODO: not ideal
+gameResult (Game board _) =
   maybe (if isDraw then Just Draw else Nothing) (Just <$> Win)
     $   headMay
     $   catMaybes

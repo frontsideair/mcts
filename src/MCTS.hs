@@ -1,23 +1,28 @@
-module MCTS where
+module MCTS
+  ( runMCTSTimeout
+  , runMCTSTimes
+  , robustChild
+  , maxChild
+  , initialGameTree
+  )
+where
 
 import           Data.Tree
-import           Data.Foldable
 import           Data.Ord
 import           Data.List
-import           Safe.Foldable
 import           Data.Random
 import           Debug.Trace
 import           System.CPUTime
 import           Control.Monad
-import           TicTacToe                      ( Game(_turn)
+import           TicTacToe                      ( Game
                                                 , Move
                                                 , Player
-                                                , Result(Win, Draw)
+                                                , Result(Win)
                                                 , initialGame
-                                                , moves
+                                                , legalMoves
+                                                , turn
                                                 , play
-                                                , result
-                                                , isTerminal
+                                                , gameResult
                                                 )
 
 data Stats = Stats { _wins :: Float, _visits :: Float } deriving (Show, Eq)
@@ -28,49 +33,49 @@ type GameTree = Tree State
 
 initialStats = Stats 0 0
 
-initialState = State initialGame (moves initialGame) initialStats
+-- Moves aren't shuffled on initial state, but it's not a problem since direct leaves of root are all expanded
+initialState = State initialGame (legalMoves initialGame) initialStats
 
 initialGameTree = Node initialState []
 
 ucb1 :: Float -> Stats -> Float
-ucb1 rootVisits (Stats wins visits) =
-  (wins / visits) + sqrt (2 * log rootVisits / visits)
+ucb1 rootVisits stats =
+  exploit stats + sqrt (2 * log rootVisits / _visits stats)
+
+exploit :: Stats -> Float
+exploit (Stats wins visits) = wins / visits
 
 shouldExpand :: GameTree -> Bool
 shouldExpand (Node (State _ unplayedMoves _) leaves) = not $ null unplayedMoves
 
 expand :: GameTree -> IO (GameTree, Result)
-expand tree@(Node (State game unplayedMoves stats) leaves) = do
-  let move' : rest = unplayedMoves
-  let game'        = play move' game
+expand (Node (State game unplayedMoves stats) leaves) = do
   -- traceIO $ "Expanding " ++ show move' ++ show game'
-  result            <- simulate game'
-  -- traceIO $ "Result " ++ show res
-  leaf <- makeLeaf game' result
-  -- unplayedMoves' <- sample $ shuffle $ moves game'
-  -- let stats' = backprop (_turn game') result initialStats
-  -- let leaf = Node (State game' unplayedMoves' stats') []
-  return
-    ( Node (State game rest (backprop (_turn game) result stats)) (leaf : leaves)
-    , result
-    )
+  result <- simulate game'
+  -- traceIO $ "Result " ++ show result
+  leaf   <- makeLeaf game' result
+  return (Node (State game rest stats) (leaf : leaves), result)
+ where
+  move' : rest = unplayedMoves -- These are shuffled at initialization
+  game'        = play move' game
 
+-- Smart constructor, shuffles moves on initialization
 makeLeaf :: Game -> Result -> IO GameTree
 makeLeaf game result = do
-  unplayedMoves <- sample $ shuffle $ moves game
+  unplayedMoves <- sample $ shuffle $ legalMoves game
   return $ Node (State game unplayedMoves stats) []
-  where stats = backprop (_turn game) result initialStats
+  where stats = backprop (turn game) result initialStats
 
 randomPlay :: Game -> IO Game
 randomPlay game = do
-  move <- sample $ randomElement $ moves game
+  move <- sample $ randomElement $ legalMoves game
   return $ play move game
   -- let g' = play move game
   -- traceIO $ show g'
   -- return g'
 
 simulate :: Game -> IO Result
-simulate game = case result game of
+simulate game = case gameResult game of
   Nothing     -> randomPlay game >>= simulate
   Just result -> return result
 
@@ -81,40 +86,53 @@ backprop player result (Stats win visits) = Stats win' (visits + 1)
     Win winner | winner /= player -> win + 1
     _                             -> win
 
--- TODO: get rid of Draw
+data Selection = Terminal Result | Expand | Select
+
+selection :: GameTree -> Selection
+selection tree@(Node (State game _ _) _) = case gameResult game of
+  Just result -> Terminal result
+  Nothing     -> if shouldExpand tree then Expand else Select
+
 select :: Float -> GameTree -> IO (GameTree, Result)
-select rootVisits tree@(Node (State g m s) leaves)
-  | isTerminal g = trace "Terminal" $ return (tree, Draw)
-  | shouldExpand tree = trace "Expanding" $ expand tree
-  | otherwise = trace ("Selecting " ++ show rootVisits) $ do
-    leaves <- sample $ shuffle leaves -- INFO: select randomly from equally scored leaves, slows algorithm down
-    let selection : rest =
-          sortOn (Down . ucb1 rootVisits . _stats . rootLabel) leaves
-    (selection', res) <- select rootVisits selection
-    let tree' = Node (State g m (backprop (_turn g) res s)) (selection' : rest)
-    return (tree', res)
+select rv tree@(Node state leaves) = backprop' <$> case selection tree of
+  Terminal result -> trace "Terminal" $ return (tree, result)
+  Expand          -> trace "Expanding" $ expand tree
+  Select          -> trace "Selecting" $ do
+    -- leaves <- sample $ shuffle leaves -- INFO: select randomly from equally scored leaves, slows algorithm down
+    let selection : rest = sortOn (Down . ucb1 rv . _stats . rootLabel) leaves
+    (selection', result) <- select rv selection
+    return (Node state (selection' : rest), result)
+ where
+  backprop' (Node (State game moves stats) leaves, result) =
+    (Node (State game moves (backprop (turn game) result stats)) leaves, result)
 
 step :: GameTree -> IO GameTree
 step tree = do
   (tree', _) <- select (_visits $ _stats $ rootLabel tree) tree
   return tree'
 
-stepTimes :: Int -> IO GameTree
-stepTimes n = foldM ((flip . const) step) initialGameTree (replicate n ())
-
-findBest :: GameTree -> State
-findBest tree = leaf
+selectChild :: (Stats -> Float) -> GameTree -> State
+selectChild strategy tree = leaf
  where
-  leaf   = maximumBy (comparing (_visits . _stats)) leaves
+  leaf   = maximumBy (comparing (strategy . _stats)) leaves
   leaves = rootLabel <$> subForest tree
 
-runMCTS' :: Integer -> GameTree -> IO GameTree
-runMCTS' timeout tree = if timeout > 0
-  then do
-    curr  <- getCPUTime
-    tree' <- step tree
-    curr' <- getCPUTime
-    runMCTS' (timeout - curr' + curr) tree'
-  else return tree
+maxChild :: GameTree -> State
+maxChild = selectChild exploit
 
-runMCTS = findBest <$> runMCTS' 10000000000000 initialGameTree
+robustChild :: GameTree -> State
+robustChild = selectChild _visits
+
+runMCTSTimeout :: Integer -> GameTree -> IO GameTree
+runMCTSTimeout seconds = helper (seconds * 10 ^ 12)
+ where
+  helper timeout tree = if timeout > 0
+    then do
+      start <- getCPUTime
+      tree' <- step tree
+      end   <- getCPUTime
+      helper (timeout - end + start) tree'
+    else return tree
+
+runMCTSTimes :: Int -> GameTree -> IO GameTree
+runMCTSTimes n tree = foldM ((flip . const) step) tree (replicate n ())
