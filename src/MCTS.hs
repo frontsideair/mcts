@@ -14,7 +14,7 @@ import           Data.Random
 import           Debug.Trace
 import           System.CPUTime
 import           Control.Monad
-import           TicTacToe                      ( Game
+import           Hamiltonicity                  ( Game
                                                 , Move
                                                 , Player
                                                 , Result(Win)
