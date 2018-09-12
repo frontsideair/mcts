@@ -9,7 +9,7 @@ module TicTacToe
   , legalMoves
   , turn
   , play
-  , gameResult
+  , result
   )
 where
 
@@ -37,7 +37,7 @@ toggle X = O
 toggle O = X
 
 isTerminal :: TicTacToe -> Bool
-isTerminal = isJust . gameResult
+isTerminal = isJust . result
 
 emptyPositions :: Board -> [Position]
 emptyPositions board = catMaybes $ M.toList $ M.mapPos f board
@@ -52,7 +52,7 @@ instance Game TicTacToe where
   legalMoves game@(TicTacToe board _) = if isTerminal game then [] else emptyPositions board
   turn = _turn
   play position (TicTacToe board player) = TicTacToe (M.setElem (Just player) position board) (toggle player)
-  gameResult (TicTacToe board _) = maybe (if isDraw then Just Draw else Nothing) (Just <$> Win)
+  result (TicTacToe board _) = maybe (if isDraw then Just Draw else Nothing) (Just <$> Win)
     $   headMay
     $   catMaybes
     $   isWinner

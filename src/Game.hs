@@ -10,17 +10,17 @@ module Game
   , legalMoves
   , turn
   , play
-  , gameResult
+  , result
   )
 where
 
 data Result player = Win player | Draw deriving Show
 
-class (Show g, Show (Move g), Eq (Player g)) => Game g where
+class (Show g, Eq (Player g)) => Game g where
   type Move g
   type Player g
   initialGame :: g
   legalMoves :: g -> [Move g]
   turn :: g -> Player g
   play :: Move g -> g -> g
-  gameResult :: g -> Maybe (Result (Player g))
+  result :: g -> Maybe (Result (Player g))

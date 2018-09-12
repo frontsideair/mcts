@@ -14,6 +14,7 @@ data HPlayer = Maker | Breaker deriving (Show, Eq, Ord)
 
 type Position = Edge
 
+-- TODO: Make use of symmetry
 type Board = Graph
 
 data Hamiltonicity = Hamiltonicity { _board :: Board, _turn :: HPlayer } deriving (Show, Eq)
@@ -28,7 +29,7 @@ toggle Maker   = Breaker
 toggle Breaker = Maker
 
 isTerminal :: Game g => g -> Bool
-isTerminal = isJust . gameResult
+isTerminal = isJust . result
 
 emptyPositions :: Board -> [Position]
 emptyPositions = uncoloredEdges
@@ -45,7 +46,7 @@ instance Game Hamiltonicity where
     where
       play' Maker   = colorMaker
       play' Breaker = colorBreaker
-  gameResult (Hamiltonicity board _)
+  result (Hamiltonicity board _)
     | null (emptyPositions board) = Just (Win Breaker)
     | findHam board               = Just (Win Maker)
     | otherwise                   = Nothing

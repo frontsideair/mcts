@@ -8,23 +8,43 @@ module MCTS
   )
 where
 
-import           Data.Tree
-import           Data.Ord
-import           Data.List
-import           Data.Random
-import           Debug.Trace
-import           System.CPUTime
-import           Control.Monad
-import           Game
+import           Data.Tree                      ( Tree(Node)
+                                                , rootLabel
+                                                , subForest
+                                                )
+import           Data.Ord                       ( Down(Down)
+                                                , comparing
+                                                )
+import           Data.List                      ( sortOn
+                                                , maximumBy
+                                                )
+import           Data.Random                    ( sample
+                                                , shuffle
+                                                , randomElement
+                                                )
+import           Debug.Trace                    ( trace )
+import           System.CPUTime                 ( getCPUTime )
+import           Control.Monad                  ( foldM )
+import           Game                           ( Game
+                                                , Move
+                                                , Result(Win)
+                                                , Player
+                                                , legalMoves
+                                                , initialGame
+                                                , play
+                                                , turn
+                                                , result
+                                                )
 
 data Stats = Stats { _wins :: Float, _visits :: Float } deriving Show
 
 data State g = State { _game :: g, _unplayedMoves :: [Move g], _stats :: Stats }
 
+-- TODO: Turn tree into a keyed one, using Map for leaves
 type GameTree g = Tree (State g)
 
 instance Game g => Show (State g) where
-  show (State game moves stats) = unlines [show game, show moves, show stats]
+  show (State game moves stats) = unlines [show game, show stats]
 
 initialStats = Stats 0 0
 
@@ -74,7 +94,7 @@ randomPlay game = do
   -- return g'
 
 simulate :: Game g => g -> IO (Result (Player g))
-simulate game = case gameResult game of
+simulate game = case result game of
   Nothing     -> randomPlay game >>= simulate
   Just result -> return result
 
@@ -88,7 +108,7 @@ backprop player result (Stats win visits) = Stats win' (visits + 1)
 data Selection g = Terminal (Result (Player g)) | Expand | Select
 
 selection :: Game g => GameTree g -> Selection g
-selection tree@(Node (State game _ _) _) = case gameResult game of
+selection tree@(Node (State game _ _) _) = case result game of
   Just result -> Terminal result
   Nothing     -> if shouldExpand tree then Expand else Select
 

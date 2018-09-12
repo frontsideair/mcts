@@ -7,6 +7,7 @@ import qualified Data.Set                      as S
 import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as M
 
+-- TODO: use vector for O(1) access
 type Graph = (Set Edge, Map Vertex (Set Vertex))
 
 type Vertex = Int
@@ -35,6 +36,7 @@ colorBreaker (u, v) (uncoloredEdges, makerColored) =
 uncoloredEdges :: Graph -> [Edge]
 uncoloredEdges = S.toList . fst
 
+-- TODO: Optimize this
 findHam :: Graph -> Bool
 findHam (_, makerColored) = helper 1 S.empty 1
  where
