@@ -13,17 +13,20 @@ module TicTacToe
   )
 where
 
-import           Data.Maybe
+import           Data.Maybe                     ( isJust
+                                                , catMaybes
+                                                )
+import           Data.Matrix                    ( Matrix )
 import qualified Data.Matrix                   as M
 import qualified Data.Vector                   as V
-import           Safe
+import           Safe                           ( headMay )
 import           Game
 
 data TPlayer = X | O deriving (Show, Eq)
 
 type Position = (Int, Int)
 
-type Board = M.Matrix (Maybe TPlayer)
+type Board = Matrix (Maybe TPlayer)
 
 data TicTacToe = TicTacToe { _board :: Board, _turn :: TPlayer } deriving (Show, Eq)
 

@@ -5,9 +5,15 @@ module Hamiltonicity
   )
 where
 
-import           Data.Maybe
-import           Safe
-import           Graph
+import           Data.Maybe                     ( isJust )
+import           Graph                          ( Graph
+                                                , Edge
+                                                , complete
+                                                , uncoloredEdges
+                                                , colorMaker
+                                                , colorBreaker
+                                                , hasHamiltonianCycle
+                                                )
 import           Game
 
 data HPlayer = Maker | Breaker deriving (Show, Eq, Ord)
@@ -22,7 +28,7 @@ data Hamiltonicity = Hamiltonicity { _board :: Board, _turn :: HPlayer } derivin
 type HMove = Position
 
 initialBoard :: Board
-initialBoard = graph 6
+initialBoard = complete 6
 
 toggle :: HPlayer -> HPlayer
 toggle Maker   = Breaker
@@ -48,5 +54,5 @@ instance Game Hamiltonicity where
       play' Breaker = colorBreaker
   result (Hamiltonicity board _)
     | null (emptyPositions board) = Just (Win Breaker)
-    | findHam board               = Just (Win Maker)
+    | hasHamiltonianCycle board               = Just (Win Maker)
     | otherwise                   = Nothing

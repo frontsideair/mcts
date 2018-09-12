@@ -1,4 +1,13 @@
-module Graph where
+module Graph
+  ( Graph
+  , Edge
+  , complete
+  , uncoloredEdges
+  , colorMaker
+  , colorBreaker
+  , hasHamiltonianCycle
+  )
+where
 
 import           Data.Set                       ( Set
                                                 , (\\)
@@ -14,8 +23,8 @@ type Vertex = Int
 
 type Edge = (Vertex, Vertex)
 
-graph :: Int -> Graph
-graph n = (uncoloredEdges, makerColored)
+complete :: Int -> Graph
+complete n = (uncoloredEdges, makerColored)
  where
   uncoloredEdges = S.fromList [ (u, v) | u <- [1 .. n], v <- [u + 1 .. n] ]
   makerColored   = M.fromList [ (u, S.empty) | u <- [1 .. n] ]
@@ -37,8 +46,8 @@ uncoloredEdges :: Graph -> [Edge]
 uncoloredEdges = S.toList . fst
 
 -- TODO: Optimize this
-findHam :: Graph -> Bool
-findHam (_, makerColored) = helper 1 S.empty 1
+hasHamiltonianCycle :: Graph -> Bool
+hasHamiltonianCycle (_, makerColored) = helper 1 S.empty 1
  where
   helper :: Int -> Set Int -> Int -> Bool
   helper depth path v = if depth == 6
