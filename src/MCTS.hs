@@ -5,6 +5,7 @@ module MCTS
   , robustChild
   , maxChild
   , initialGameTree
+  , rootStats
   , stats
   )
 where
@@ -129,6 +130,9 @@ step :: Game g => GameTree g -> IO (GameTree g)
 step tree = do
   (tree', _) <- select (_visits $ _stats $ rootLabel tree) tree
   return tree'
+
+rootStats :: GameTree g -> Stats
+rootStats = _stats . rootLabel
 
 stats :: GameTree g -> [(Move g, Stats)]
 stats tree = second (_stats . rootLabel) <$> subForest tree
