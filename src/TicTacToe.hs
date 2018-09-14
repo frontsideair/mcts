@@ -1,15 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module TicTacToe
-  ( Game
-  , Move
-  , Player
-  , Result(Win, Draw)
-  , initialGame
-  , legalMoves
-  , turn
-  , play
-  , result
+  ( TicTacToe
   )
 where
 
