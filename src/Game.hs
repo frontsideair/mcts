@@ -16,7 +16,7 @@ where
 
 data Result player = Win player | Draw deriving Show
 
-class (Show g, Eq (Player g)) => Game g where
+class (Ord (Move g), Eq (Player g)) => Game g where
   type Move g
   type Player g
   initialGame :: g
