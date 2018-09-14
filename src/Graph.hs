@@ -13,7 +13,9 @@ import           Data.Set                       ( Set
                                                 , (\\)
                                                 )
 import qualified Data.Set                      as S
-import           Data.Map.Strict                ( Map )
+import           Data.Map.Strict                ( Map
+                                                , (!)
+                                                )
 import qualified Data.Map.Strict               as M
 
 -- TODO: use vector for O(1) access
@@ -49,11 +51,10 @@ uncoloredEdges = S.toList . fst
 hasHamiltonianCycle :: Graph -> Bool
 hasHamiltonianCycle (_, makerColored) = helper S.empty 1
  where
-  n = M.size makerColored
+  n = M.size makerColored - 1
+
   helper :: Set Int -> Int -> Bool
-  helper path v = if S.size path < n
+  helper path v = if S.size path == n
     then 1 `elem` neighbors
     else any (helper (S.insert v path)) (neighbors \\ path)
-    where neighbors = M.findWithDefault S.empty v makerColored
-
-
+    where neighbors = makerColored ! v
