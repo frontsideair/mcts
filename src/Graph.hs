@@ -47,12 +47,13 @@ uncoloredEdges = S.toList . fst
 
 -- TODO: Optimize this
 hasHamiltonianCycle :: Graph -> Bool
-hasHamiltonianCycle (_, makerColored) = helper 1 S.empty 1
+hasHamiltonianCycle (_, makerColored) = helper S.empty 1
  where
-  helper :: Int -> Set Int -> Int -> Bool
-  helper depth path v = if depth == 6
+  n = M.size makerColored
+  helper :: Set Int -> Int -> Bool
+  helper path v = if S.size path < n
     then 1 `elem` neighbors
-    else any (helper (depth + 1) (S.insert v path)) (neighbors \\ path)
+    else any (helper (S.insert v path)) (neighbors \\ path)
     where neighbors = M.findWithDefault S.empty v makerColored
 
 
