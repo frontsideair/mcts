@@ -10,12 +10,9 @@ module MCTS
   )
 where
 
-import           Tree                           ( Tree(Node)
-                                                , node
+import           Data.Tree                      ( Tree(Node)
                                                 , rootLabel
                                                 , subForest
-                                                , findMax
-                                                , insert
                                                 )
 import           Data.Ord                       ( Down(Down)
                                                 , comparing
@@ -30,7 +27,6 @@ import           Data.Random                    ( sample
 import           Debug.Trace                    ( trace )
 import           System.CPUTime                 ( getCPUTime )
 import           Control.Monad                  ( foldM )
-import           Control.Arrow                  ( second )
 import           Game                           ( Game
                                                 , Move
                                                 , Result(Win)
@@ -42,16 +38,16 @@ import           Game                           ( Game
                                                 , result
                                                 )
 
-data Stats = Stats { _wins :: Float, _visits :: Float }
-
-instance Show Stats where
-  show (Stats wins visits) = show wins ++ "/" ++ show visits ++ "=" ++ show (wins / visits)
+data Stats = Stats { _wins :: Float, _visits :: Float } deriving Show
 
 data State g = State { _game :: g, _unplayedMoves :: [Move g], _stats :: Stats }
 
-type GameTree g = Tree (Move g) (State g)
+-- TODO: Turn tree into a keyed one, using Map for leaves
+type GameTree g = Tree (State g)
 
-initialStats :: Stats
+instance Game g => Show (State g) where
+  show (State game moves stats) = unlines [show game, show stats]
+
 initialStats = Stats 0 0
 
 -- Moves aren't shuffled on initial state, but it's not a problem since direct leaves of root are all expanded
@@ -61,7 +57,7 @@ initialState :: Game g => State g
 initialState = state initialGame
 
 initialGameTree :: Game g => GameTree g
-initialGameTree = node initialState
+initialGameTree = Node initialState []
 
 ucb1 :: Float -> Stats -> Float
 ucb1 rootVisits stats =
@@ -75,25 +71,29 @@ shouldExpand (Node (State _ unplayedMoves _) leaves) = not $ null unplayedMoves
 
 expand :: Game g => GameTree g -> IO (GameTree g, Result (Player g))
 expand (Node (State game unplayedMoves stats) leaves) = do
+  -- traceIO $ "Expanding " ++ show move' ++ show game'
   result <- simulate game'
+  -- traceIO $ "Result " ++ show result
   leaf   <- makeLeaf game' result
-  return
-    (Node (State game rest stats) (insert move' (node leaf) leaves), result)
+  return (Node (State game rest stats) (leaf : leaves), result)
  where
   move' : rest = unplayedMoves -- These are shuffled at initialization
   game'        = play move' game
 
 -- Smart constructor, shuffles moves on initialization
-makeLeaf :: Game g => g -> Result (Player g) -> IO (State g)
+makeLeaf :: Game g => g -> Result (Player g) -> IO (GameTree g)
 makeLeaf game result = do
   unplayedMoves <- sample $ shuffle $ legalMoves game
-  return $ State game unplayedMoves stats
+  return $ Node (State game unplayedMoves stats) []
   where stats = backprop (turn game) result initialStats
 
 randomPlay :: Game g => g -> IO g
 randomPlay game = do
   move <- sample $ randomElement $ legalMoves game
   return $ play move game
+  -- let g' = play move game
+  -- traceIO $ show g'
+  -- return g'
 
 simulate :: Game g => g -> IO (Result (Player g))
 simulate game = case result game of
@@ -119,9 +119,10 @@ select rv tree@(Node state leaves) = backprop' <$> case selection tree of
   Terminal result -> trace "Terminal" $ return (tree, result)
   Expand          -> trace "Expanding" $ expand tree
   Select          -> trace "Selecting" $ do
-    let Just (move, leaf) = findMax (ucb1 rv . _stats . rootLabel) leaves
-    (leaf', result) <- select rv leaf
-    return (Node state (insert move leaf' leaves), result)
+    -- leaves <- sample $ shuffle leaves -- INFO: select randomly from equally scored leaves, slows algorithm down
+    let selection : rest = sortOn (Down . ucb1 rv . _stats . rootLabel) leaves
+    (selection', result) <- select rv selection
+    return (Node state (selection' : rest), result)
  where
   backprop' (Node (State game moves stats) leaves, result) =
     (Node (State game moves (backprop (turn game) result stats)) leaves, result)
@@ -134,17 +135,19 @@ step tree = do
 rootStats :: GameTree g -> Stats
 rootStats = _stats . rootLabel
 
-stats :: GameTree g -> [(Move g, Stats)]
-stats tree = second (_stats . rootLabel) <$> subForest tree
+stats :: GameTree g -> [Stats]
+stats tree = _stats . rootLabel <$> subForest tree
 
-selectChild :: (Stats -> Float) -> GameTree g -> Move g
-selectChild strategy tree = move
-  where (move, _) = maximumBy (comparing (strategy . snd)) (stats tree)
+selectChild :: (Stats -> Float) -> GameTree g -> State g
+selectChild strategy tree = leaf
+ where
+  leaf   = maximumBy (comparing (strategy . _stats)) leaves
+  leaves = rootLabel <$> subForest tree
 
-maxChild :: GameTree g -> Move g
+maxChild :: GameTree g -> State g
 maxChild = selectChild exploit
 
-robustChild :: GameTree g -> Move g
+robustChild :: GameTree g -> State g
 robustChild = selectChild _visits
 
 runMCTSTimeout :: Game g => Integer -> GameTree g -> IO (GameTree g)
