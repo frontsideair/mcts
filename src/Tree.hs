@@ -7,6 +7,7 @@ import qualified Data.Map.Strict               as M
 import           Data.Semigroup
 
 data Tree k v = Node v (Map k (Tree k v)) deriving Show
+-- TODO: Consider using IOArray here
 
 rootLabel :: Tree k v -> v
 rootLabel (Node v _) = v

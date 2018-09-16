@@ -18,43 +18,48 @@ import           Data.Map.Strict                ( Map
                                                 )
 import qualified Data.Map.Strict               as M
 
--- TODO: use vector for O(1) access
-type Graph = (Set Edge, Map Vertex (Set Vertex))
+-- (uncoloredEdges, makerColored, winningPaths)
+type Graph = (Set Edge, Set Edge, [Set Edge])
 
 type Vertex = Int
 
 type Edge = (Vertex, Vertex)
 
+edge :: Vertex -> Vertex -> Edge
+edge u v = if u < v then (u, v) else (v, u)
+
 complete :: Int -> Graph
-complete n = (uncoloredEdges, makerColored)
+complete n = (uncoloredEdges, makerColored, winningPaths)
  where
-  uncoloredEdges = S.fromList [ (u, v) | u <- [1 .. n], v <- [u + 1 .. n] ]
-  makerColored   = M.fromList [ (u, S.empty) | u <- [1 .. n] ]
+  uncoloredEdges = S.fromList [ edge u v | u <- [1 .. n], v <- [u + 1 .. n] ]
+  makerColored   = S.empty
+  winningPaths   = cycles n
+
+cycles :: Int -> [Set Edge]
+cycles n = z <$> cs
+ where
+  z xs = S.fromList $ zipWith edge xs (tail (cycle xs))
+  cs = iterate g [[1]] !! (n - 1)
+  g paths =
+    [ vertex : path | path <- paths, vertex <- [1 .. n], vertex `notElem` path ]
 
 colorMaker :: Edge -> Graph -> Graph
-colorMaker (u, v) (uncoloredEdges, makerColored) =
-  (uncoloredEdges', makerColored')
+colorMaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths) =
+  (uncoloredEdges', makerColored', winningPaths)
  where
-  uncoloredEdges' = S.delete (u, v) uncoloredEdges
-  makerColored' =
-    M.adjust (S.insert v) u $ M.adjust (S.insert u) v makerColored
+  uncoloredEdges' = S.delete edge uncoloredEdges
+  makerColored'   = S.insert edge makerColored
 
 colorBreaker :: Edge -> Graph -> Graph
-colorBreaker (u, v) (uncoloredEdges, makerColored) =
-  (uncoloredEdges', makerColored)
-  where uncoloredEdges' = S.delete (u, v) uncoloredEdges
+colorBreaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths) =
+  (uncoloredEdges', makerColored, winningPaths')
+ where
+  uncoloredEdges' = S.delete edge uncoloredEdges
+  winningPaths'   = filter (S.notMember edge) winningPaths
 
 uncoloredEdges :: Graph -> [Edge]
-uncoloredEdges = S.toList . fst
+uncoloredEdges (uncolored, _, _) = S.toList uncolored
 
--- TODO: Optimize this
 hasHamiltonianCycle :: Graph -> Bool
-hasHamiltonianCycle (_, makerColored) = helper S.empty 1
- where
-  n = M.size makerColored - 1
-
-  helper :: Set Int -> Int -> Bool
-  helper path v = if S.size path == n
-    then 1 `elem` neighbors
-    else any (helper (S.insert v path)) (neighbors \\ path)
-    where neighbors = makerColored ! v
+hasHamiltonianCycle (_, makerColored, winningPaths) =
+  any (`S.isSubsetOf` makerColored) winningPaths
