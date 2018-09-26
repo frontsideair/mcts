@@ -35,12 +35,15 @@ complete n = (uncoloredEdges, makerColored, winningPaths)
   makerColored   = S.empty
   winningPaths   = cycles n
 
+rotate :: [a] -> [a]
+rotate = tail . cycle
+
 cycles :: Int -> [Set Edge]
-cycles n = z <$> cs
+cycles n = S.fromList . pathToCycle <$> cyclicPaths
  where
-  z xs = S.fromList $ zipWith edge xs (tail (cycle xs))
-  cs = iterate g [[1]] !! (n - 1)
-  g paths =
+  pathToCycle xs = zipWith edge xs (rotate xs)
+  cyclicPaths = iterate grow [[1]] !! (n - 1)
+  grow paths =
     [ vertex : path | path <- paths, vertex <- [1 .. n], vertex `notElem` path ]
 
 colorMaker :: Edge -> Graph -> Graph
