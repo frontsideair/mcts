@@ -1,10 +1,9 @@
 import           MCTS
 import           Hamiltonicity
 import           TicTacToe
+import           GamePlay
 
 main :: IO ()
 main = do
-  tree <- runMCTSTimeout 10 initialGameTree :: IO (GameTree Hamiltonicity)
-  print $ rootStats tree
-  print $ stats tree
-  print $ robustChild tree
+  result <- gamePlay 10 (mctsPlay :: AIPlayer Hamiltonicity) mctsPlay
+  print result

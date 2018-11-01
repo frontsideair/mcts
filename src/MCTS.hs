@@ -1,12 +1,5 @@
 module MCTS
-  ( GameTree
-  , runMCTSTimeout
-  , runMCTSTimes
-  , robustChild
-  , maxChild
-  , initialGameTree
-  , rootStats
-  , stats
+  ( mctsPlay
   )
 where
 
@@ -57,11 +50,8 @@ initialStats = Stats 0 0
 -- Moves aren't shuffled on initial state, but it's not a problem since direct leaves of root are all expanded
 state game = State game (legalMoves game) initialStats
 
-initialState :: Game g => State g
-initialState = state initialGame
-
-initialGameTree :: Game g => GameTree g
-initialGameTree = node initialState
+gameTree :: Game g => g -> GameTree g
+gameTree game = node $ state game
 
 ucb1 :: Float -> Stats -> Float
 ucb1 rootVisits stats =
@@ -116,9 +106,9 @@ selection tree@(Node (State game _ _) _) = case result game of
 
 select :: Game g => Float -> GameTree g -> IO (GameTree g, Result (Player g))
 select rv tree@(Node state leaves) = backprop' <$> case selection tree of
-  Terminal result -> trace "Terminal" $ return (tree, result)
-  Expand          -> trace "Expanding" $ expand tree
-  Select          -> trace "Selecting" $ do
+  Terminal result -> return (tree, result)
+  Expand          -> expand tree
+  Select          -> do
     let Just (move, leaf) = findMax (ucb1 rv . _stats . rootLabel) leaves
     (leaf', result) <- select rv leaf
     return (Node state (insert move leaf' leaves), result)
@@ -147,8 +137,8 @@ maxChild = selectChild exploit
 robustChild :: GameTree g -> Move g
 robustChild = selectChild _visits
 
-runMCTSTimeout :: Game g => Integer -> GameTree g -> IO (GameTree g)
-runMCTSTimeout seconds = helper (seconds * 10 ^ 12)
+mctsPlay :: Game g => Integer -> g -> IO g
+mctsPlay seconds game = helper (seconds * 10 ^ 12) (gameTree game)
  where
   helper timeout tree = if timeout > 0
     then do
@@ -156,7 +146,5 @@ runMCTSTimeout seconds = helper (seconds * 10 ^ 12)
       tree' <- step tree
       end   <- getCPUTime
       helper (timeout - end + start) tree'
-    else return tree
+    else trace (show $ robustChild tree) return $ play (robustChild tree) game
 
-runMCTSTimes :: Game g => Int -> GameTree g -> IO (GameTree g)
-runMCTSTimes n tree = foldM ((flip . const) step) tree (replicate n ())
