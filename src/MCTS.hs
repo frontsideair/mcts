@@ -138,7 +138,7 @@ maxChild = selectChild exploit
 robustChild :: GameTree g -> Move g
 robustChild = selectChild _visits
 
-mctsPlay :: Game g => Integer -> g -> IO g
+mctsPlay :: Game g => Integer -> g -> IO (Move g)
 mctsPlay seconds game = helper (seconds * 10 ^ 12) (gameTree game)
  where
   helper timeout tree = if timeout > 0
@@ -147,4 +147,4 @@ mctsPlay seconds game = helper (seconds * 10 ^ 12) (gameTree game)
       tree' <- step tree
       end   <- getCPUTime
       helper (timeout - end + start) tree'
-    else trace (show $ robustChild tree) return $ play (robustChild tree) game
+    else return $ robustChild tree
