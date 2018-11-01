@@ -1,6 +1,5 @@
 import           MCTS
 import           Hamiltonicity
-import           TicTacToe
 import           GamePlay
 
 main :: IO ()

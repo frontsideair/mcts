@@ -48,6 +48,7 @@ initialStats :: Stats
 initialStats = Stats 0 0
 
 -- Moves aren't shuffled on initial state, but it's not a problem since direct leaves of root are all expanded
+state :: Game g => g -> State g
 state game = State game (legalMoves game) initialStats
 
 gameTree :: Game g => g -> GameTree g
@@ -147,4 +148,3 @@ mctsPlay seconds game = helper (seconds * 10 ^ 12) (gameTree game)
       end   <- getCPUTime
       helper (timeout - end + start) tree'
     else trace (show $ robustChild tree) return $ play (robustChild tree) game
-

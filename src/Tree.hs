@@ -4,7 +4,6 @@ module Tree where
 
 import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as M
-import           Data.Semigroup
 
 data Tree k v = Node v (Map k (Tree k v)) deriving Show
 -- TODO: Consider using IOArray here
