@@ -22,3 +22,11 @@ prop_cycles_path_length :: Property
 prop_cycles_path_length = property $ do
   n <- forAll $ Gen.integral (Range.linear 3 10)
   all (== n) (S.map length (cycles n)) === True
+
+prop_color_breaker :: Property
+prop_color_breaker = property $ do
+  n <- forAll $ Gen.integral (Range.linear 3 10)
+  let g = complete n
+  edge <- forAll $ Gen.element $ uncoloredEdges g
+  let g' = colorBreaker edge g
+  all (S.notMember edge) (winningPaths g') === True
