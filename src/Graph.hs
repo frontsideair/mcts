@@ -9,17 +9,15 @@ module Graph
   )
 where
 
-import           Data.Set                       ( Set
-                                                , (\\)
-                                                )
+import           Data.Set                       ( Set )
 import qualified Data.Set                      as S
-import           Data.Map.Strict                ( Map
-                                                , (!)
-                                                )
-import qualified Data.Map.Strict               as M
+import           Data.Foldable                  ( any )
 
--- (uncoloredEdges, makerColored, winningPaths)
-type Graph = (Set Edge, Set Edge, [Set Edge])
+-- uncoloredEdges is the set of edges unclaimed by maker or breaker
+-- makerColoredEdges is the set of edges claimed by maker
+-- winningHamCycles is the set that contains the cycles made of uncolored and maker colored edges
+-- (uncoloredEdges, makerColoredEdges, winningHamCycles)
+type Graph = (Set Edge, Set Edge, Set (Set Edge))
 
 type Vertex = Int
 
@@ -38,8 +36,8 @@ complete n = (uncoloredEdges, makerColored, winningPaths)
 rotate :: [a] -> [a]
 rotate = tail . cycle
 
-cycles :: Int -> [Set Edge]
-cycles n = S.fromList . pathToCycle <$> cyclicPaths
+cycles :: Int -> Set (Set Edge)
+cycles n = S.fromList $ S.fromList . pathToCycle <$> cyclicPaths
  where
   pathToCycle xs = zipWith edge xs (rotate xs)
   cyclicPaths = iterate grow [[1]] !! (n - 1)
@@ -58,7 +56,7 @@ colorBreaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths) =
   (uncoloredEdges', makerColored, winningPaths')
  where
   uncoloredEdges' = S.delete edge uncoloredEdges
-  winningPaths'   = filter (S.notMember edge) winningPaths
+  winningPaths'   = S.filter (S.notMember edge) winningPaths
 
 uncoloredEdges :: Graph -> [Edge]
 uncoloredEdges (uncolored, _, _) = S.toList uncolored
