@@ -1,9 +1,9 @@
-import           MCTS
-import           RandomOpponent
-import           Hamiltonicity
-import           GamePlay
+import           Opponent.MCTS
+import           Opponent.Random
+import           Game.Hamiltonicity
+import           Game
 
 main :: IO ()
 main = do
-  result <- gamePlay 10 (mctsPlay :: AIPlayer Hamiltonicity) randomPlay
+  result <- playToEnd 10 (mctsPlay :: AIPlayer Hamiltonicity) randomPlay
   print result

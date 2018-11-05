@@ -1,4 +1,7 @@
-module RandomOpponent where
+module Opponent.Random
+  ( randomPlay
+  )
+where
 
 import           Game                           ( Game
                                                 , Move

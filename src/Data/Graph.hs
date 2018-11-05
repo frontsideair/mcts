@@ -1,4 +1,4 @@
-module Graph
+module Data.Graph
   ( Graph
   , Edge
   , complete
@@ -13,7 +13,7 @@ import           Data.Set                       ( Set )
 import qualified Data.Set                      as S
 import           Data.Foldable                  ( any )
 
-import           Graph.Internal
+import           Data.Graph.Internal
 
 -- uncoloredEdges is the set of edges unclaimed by maker or breaker
 -- makerColoredEdges is the set of edges claimed by maker

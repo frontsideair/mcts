@@ -1,12 +1,12 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Hamiltonicity
+module Game.Hamiltonicity
   ( Hamiltonicity
   )
 where
 
 import           Data.Maybe                     ( isJust )
-import           Graph                          ( Graph
+import           Data.Graph                     ( Graph
                                                 , Edge
                                                 , complete
                                                 , uncoloredEdges

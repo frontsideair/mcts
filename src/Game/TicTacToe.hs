@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module TicTacToe
+module Game.TicTacToe
   ( TicTacToe
   )
 where

@@ -1,4 +1,4 @@
-module Graph.Internal where
+module Data.Graph.Internal where
 
 import           Data.Set                       ( Set )
 import qualified Data.Set                      as S

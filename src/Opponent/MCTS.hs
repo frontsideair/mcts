@@ -1,9 +1,9 @@
-module MCTS
+module Opponent.MCTS
   ( mctsPlay
   )
 where
 
-import           Tree                           ( Tree(Node)
+import           Data.Tree                           ( Tree(Node)
                                                 , node
                                                 , rootLabel
                                                 , subForest

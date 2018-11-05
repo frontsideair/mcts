@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Tree where
+module Data.Tree where
 
 import           Data.Map.Strict                ( Map )
 import qualified Data.Map.Strict               as M

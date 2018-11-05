@@ -6,7 +6,7 @@ import qualified Hedgehog.Range                as Range
 
 import qualified Data.Set                      as S
 
-import           Graph.Internal
+import           Data.Graph.Internal
 
 prop_rotate_length :: Property
 prop_rotate_length = property $ do
