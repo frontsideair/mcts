@@ -27,6 +27,17 @@ library:
     - containers
     - random-fu
 
+tests:
+  all:
+    main: Main.hs
+    source-dirs: tests
+    dependencies:
+      - hamiltonicity
+      - hedgehog
+      - tasty
+      - tasty-hedgehog
+      - containers
+
 executables:
   hamiltonicity-exe:
     main: Main.hs
