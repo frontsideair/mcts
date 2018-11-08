@@ -30,3 +30,11 @@ prop_color_breaker = property $ do
   edge <- forAll $ Gen.element $ uncoloredEdges g
   let g' = colorBreaker edge g
   all (S.notMember edge) (winningPaths g') === True
+
+prop_color_breaker_removed :: Property
+prop_color_breaker_removed = property $ do
+  n <- forAll $ Gen.integral (Range.linear 3 10)
+  let g = complete n
+  edge <- forAll $ Gen.element $ uncoloredEdges g
+  let g' = colorBreaker edge g
+  (length $ S.difference (winningPaths g) (winningPaths g')) === product [1 .. n - 2]

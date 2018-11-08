@@ -28,7 +28,7 @@ library:
     - random-fu
 
 tests:
-  all:
+  tests:
     main: Main.hs
     source-dirs: tests
     dependencies:

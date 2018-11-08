@@ -3,7 +3,7 @@ module Opponent.MCTS
   )
 where
 
-import           Data.Tree                           ( Tree(Node)
+import           Data.Tree                      ( Tree(Node)
                                                 , node
                                                 , rootLabel
                                                 , subForest

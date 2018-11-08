@@ -9,8 +9,4 @@ module Data.Graph
   )
 where
 
-import           Data.Set                       ( Set )
-import qualified Data.Set                      as S
-import           Data.Foldable                  ( any )
-
 import           Data.Graph.Internal

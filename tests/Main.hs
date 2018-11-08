@@ -13,5 +13,8 @@ prop_cycles = testGroup
   , testProperty "prop_cycles_path_length" prop_cycles_path_length
   ]
 
-prop_breaker =
-  testGroup "breaker" [testProperty "color_breaker" prop_color_breaker]
+prop_breaker = testGroup
+  "breaker"
+  [ testProperty "color_breaker" prop_color_breaker
+  , testProperty "color_breaker_removed" prop_color_breaker_removed
+  ]
