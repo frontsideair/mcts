@@ -21,7 +21,7 @@ import           Data.Random                    ( sample
                                                 , randomElement
                                                 )
 import           Debug.Trace                    ( trace )
-import           System.CPUTime                 ( getCPUTime )
+import           System.CPUTime.Extra           ( foldIOTimeout )
 import           Control.Monad                  ( foldM )
 import           Control.Arrow                  ( second )
 import           Game                           ( Game
@@ -139,12 +139,4 @@ robustChild :: GameTree g -> Move g
 robustChild = selectChild _visits
 
 mctsPlay :: Game g => Integer -> g -> IO (Move g)
-mctsPlay seconds game = helper (seconds * 10 ^ 12) (gameTree game)
- where
-  helper timeout tree = if timeout > 0
-    then do
-      start <- getCPUTime
-      tree' <- step tree
-      end   <- getCPUTime
-      helper (timeout - end + start) tree'
-    else return $ robustChild tree
+mctsPlay seconds game = robustChild <$> foldIOTimeout seconds (gameTree game) step
