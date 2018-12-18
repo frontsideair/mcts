@@ -14,6 +14,9 @@ rootLabel (Node v _) = v
 subForest :: Tree k v -> [(k, Tree k v)]
 subForest (Node _ vs) = M.toList vs
 
+getLeaf :: Ord k => Tree k v -> k -> Tree k v
+getLeaf (Node _ vs) = (M.!) vs
+
 node :: v -> Tree k v
 node v = Node v M.empty
 

@@ -1,23 +1,16 @@
 name: hamiltonicity
 version: 0.1.0.0
-github: "githubuser/hamiltonicity"
+github: frontsideair/hamiltonicity
 license: BSD3
-author: "Author name here"
-maintainer: "example@example.com"
-copyright: "2018 Author name here"
-
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description: Please see the README on GitHub at <https://github.com/githubuser/hamiltonicity#readme>
-
+author: Fatih Altinok
+maintainer: fatihaltinok@live.com
+copyright: 2018 Fatih Altinok
+description: >-
+  Please see the README on GitHub at
+  <https://github.com/frontsideair/hamiltonicity#readme>
 dependencies:
   - base >= 4.7 && < 5
-
+  - safe
 library:
   source-dirs: src
   dependencies:
@@ -26,7 +19,6 @@ library:
     - vector
     - containers
     - random-fu
-
 tests:
   tests:
     main: Main.hs
@@ -37,14 +29,13 @@ tests:
       - tasty
       - tasty-hedgehog
       - containers
-
 executables:
-  hamiltonicity-exe:
+  hamiltonicity:
     main: Main.hs
     source-dirs: app
     ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+      - "-threaded"
+      - "-rtsopts"
+      - "-with-rtsopts=-N"
     dependencies:
       - hamiltonicity

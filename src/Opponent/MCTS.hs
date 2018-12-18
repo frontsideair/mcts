@@ -1,5 +1,8 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Opponent.MCTS
-  ( mctsPlay
+  ( mctsPlayChan
+  , mctsPlayChanReuse
   )
 where
 
@@ -9,6 +12,7 @@ import           Data.Tree                      ( Tree(Node)
                                                 , subForest
                                                 , findMax
                                                 , insert
+                                                , getLeaf
                                                 )
 import           Data.Ord                       ( Down(Down)
                                                 , comparing
@@ -22,7 +26,9 @@ import           Data.Random                    ( sample
                                                 )
 import           Debug.Trace                    ( trace )
 import           System.CPUTime.Extra           ( foldIOTimeout )
-import           Control.Monad                  ( foldM )
+import           Control.Monad                  ( foldM
+                                                , forever
+                                                )
 import           Control.Arrow                  ( second )
 import           Game                           ( Game
                                                 , Move
@@ -33,6 +39,13 @@ import           Game                           ( Game
                                                 , play
                                                 , turn
                                                 , result
+                                                , Message(Start, Move)
+                                                )
+import           Control.Concurrent             ( forkIO )
+import           Control.Concurrent.Chan        ( newChan
+                                                , Chan
+                                                , readChan
+                                                , writeChan
                                                 )
 
 data Stats = Stats { _wins :: Float, _visits :: Float }
@@ -139,4 +152,44 @@ robustChild :: GameTree g -> Move g
 robustChild = selectChild _visits
 
 mctsPlay :: Game g => Integer -> g -> IO (Move g)
-mctsPlay seconds game = robustChild <$> foldIOTimeout seconds (gameTree game) step
+mctsPlay seconds game =
+  robustChild <$> foldIOTimeout seconds (gameTree game) step
+
+mctsPlay' :: Game g => Integer -> GameTree g -> IO (Move g, GameTree g)
+mctsPlay' seconds gameTree = do
+  newTree <- foldIOTimeout seconds gameTree step
+  return (robustChild newTree, newTree)
+
+mctsPlayChan
+  :: Game g
+  => Integer
+  -> Chan (Message (Move g))
+  -> Chan (Message (Move g))
+  -> IO ()
+mctsPlayChan seconds input output = helper initialGame
+ where
+  helper game = do
+    message <- readChan input
+    let game' = case message of
+          Start  -> initialGame
+          Move m -> play m game
+    move <- mctsPlay seconds game'
+    writeChan output (Move move)
+    helper (play move game')
+
+mctsPlayChanReuse
+  :: Game g
+  => Integer
+  -> Chan (Message (Move g))
+  -> Chan (Message (Move g))
+  -> IO ()
+mctsPlayChanReuse seconds input output = helper (gameTree initialGame)
+ where
+  helper tree = do
+    message <- readChan input
+    let tree' = case message of
+          Start  -> gameTree initialGame
+          Move m -> getLeaf tree m
+    (move, tree'') <- mctsPlay' seconds tree'
+    writeChan output (Move move)
+    helper (getLeaf tree'' move)
