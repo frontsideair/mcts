@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Opponent.MCTS
   ( mctsPlayChan
   , mctsPlayChanReuse
@@ -14,21 +12,13 @@ import           Data.Tree                      ( Tree(Node)
                                                 , insert
                                                 , getLeaf
                                                 )
-import           Data.Ord                       ( Down(Down)
-                                                , comparing
-                                                )
-import           Data.List                      ( sortOn
-                                                , maximumBy
-                                                )
+import           Data.Ord                       ( comparing )
+import           Data.List                      ( maximumBy )
 import           Data.Random                    ( sample
                                                 , shuffle
                                                 , randomElement
                                                 )
-import           Debug.Trace                    ( trace )
 import           System.CPUTime.Extra           ( foldIOTimeout )
-import           Control.Monad                  ( foldM
-                                                , forever
-                                                )
 import           Control.Arrow                  ( second )
 import           Game                           ( Game
                                                 , Move
@@ -41,9 +31,7 @@ import           Game                           ( Game
                                                 , result
                                                 , Message(Start, Move)
                                                 )
-import           Control.Concurrent             ( forkIO )
-import           Control.Concurrent.Chan        ( newChan
-                                                , Chan
+import           Control.Concurrent.Chan        ( Chan
                                                 , readChan
                                                 , writeChan
                                                 )

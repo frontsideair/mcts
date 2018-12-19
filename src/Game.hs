@@ -1,8 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Game
   ( Game
@@ -20,9 +18,7 @@ module Game
   )
 where
 
-import           Data.Tuple
-import           Debug.Trace                    ( traceIO )
-import           Control.Monad                  ( forever )
+import           Data.Tuple                     ( swap )
 import           Control.Concurrent             ( forkIO
                                                 , killThread
                                                 )
@@ -48,12 +44,7 @@ type AIPlayer g = Integer -> Chan (Message (Move g)) -> Chan (Message (Move g)) 
 data Message m = Start | Move m deriving Show
 
 playToEnd
-  :: forall g
-   . Game g
-  => Integer
-  -> AIPlayer g
-  -> AIPlayer g
-  -> IO (Result (Player g))
+  :: Game g => Integer -> AIPlayer g -> AIPlayer g -> IO (Result (Player g))
 playToEnd seconds maker breaker = do
   makerIn    <- newChan
   makerOut   <- newChan
@@ -62,8 +53,7 @@ playToEnd seconds maker breaker = do
   a          <- forkIO $ maker seconds makerIn makerOut
   b          <- forkIO $ breaker seconds breakerIn breakerOut
   writeChan makerIn Start
-  result <- helper (initialGame :: g)
-                   ((makerOut, breakerIn), (breakerOut, makerIn))
+  result <- helper initialGame ((makerOut, breakerIn), (breakerOut, makerIn))
   killThread a
   killThread b
   return result
