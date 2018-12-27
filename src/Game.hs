@@ -45,13 +45,13 @@ data Message m = Start | Move m deriving Show
 
 playToEnd
   :: Game g => Integer -> AIPlayer g -> AIPlayer g -> IO (Result (Player g))
-playToEnd seconds maker breaker = do
+playToEnd iterations maker breaker = do
   makerIn    <- newChan
   makerOut   <- newChan
   breakerIn  <- newChan
   breakerOut <- newChan
-  a          <- forkIO $ maker seconds makerIn makerOut
-  b          <- forkIO $ breaker seconds breakerIn breakerOut
+  a          <- forkIO $ maker iterations makerIn makerOut
+  b          <- forkIO $ breaker iterations breakerIn breakerOut
   writeChan makerIn Start
   result <- helper initialGame ((makerOut, breakerIn), (breakerOut, makerIn))
   killThread a

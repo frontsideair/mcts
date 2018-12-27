@@ -140,13 +140,19 @@ robustChild :: GameTree g -> Move g
 robustChild = selectChild _visits
 
 mctsPlay :: Game g => Integer -> g -> IO (Move g)
-mctsPlay seconds game =
-  robustChild <$> foldIOTimeout seconds (gameTree game) step
+mctsPlay iterations game =
+  robustChild <$> iterateM iterations (gameTree game) step
 
 mctsPlay' :: Game g => Integer -> GameTree g -> IO (Move g, GameTree g)
-mctsPlay' seconds gameTree = do
-  newTree <- foldIOTimeout seconds gameTree step
+mctsPlay' iterations gameTree = do
+  newTree <- iterateM iterations gameTree step
   return (robustChild newTree, newTree)
+
+iterateM :: Monad m => Integer -> a -> (a -> m a) -> m a
+iterateM 0 a f = return a
+iterateM n a f = do
+  a' <- f a
+  iterateM (n - 1) a' f
 
 mctsPlayChan
   :: Game g
@@ -154,14 +160,14 @@ mctsPlayChan
   -> Chan (Message (Move g))
   -> Chan (Message (Move g))
   -> IO ()
-mctsPlayChan seconds input output = helper initialGame
+mctsPlayChan iterations input output = helper initialGame
  where
   helper game = do
     message <- readChan input
     let game' = case message of
           Start  -> initialGame
           Move m -> play m game
-    move <- mctsPlay seconds game'
+    move <- mctsPlay iterations game'
     writeChan output (Move move)
     helper (play move game')
 
@@ -171,13 +177,13 @@ mctsPlayChanReuse
   -> Chan (Message (Move g))
   -> Chan (Message (Move g))
   -> IO ()
-mctsPlayChanReuse seconds input output = helper (gameTree initialGame)
+mctsPlayChanReuse iterations input output = helper (gameTree initialGame)
  where
   helper tree = do
     message <- readChan input
     let tree' = case message of
           Start  -> gameTree initialGame
           Move m -> getLeaf tree m
-    (move, tree'') <- mctsPlay' seconds tree'
+    (move, tree'') <- mctsPlay' iterations tree'
     writeChan output (Move move)
     helper (getLeaf tree'' move)

@@ -12,9 +12,9 @@ main :: IO ()
 main = do
   args <- getArgs
   case headMay args >>= readMay of
-    Nothing      -> putStrLn "Usage: hamiltonicity [seconds]"
-    Just seconds -> do
-      result <- playToEnd seconds
+    Nothing      -> putStrLn "Usage: hamiltonicity [iterations]"
+    Just iterations -> do
+      result <- playToEnd iterations
                           (mctsPlayChanReuse :: AIPlayer Hamiltonicity)
                           mctsPlayChan
       print result
