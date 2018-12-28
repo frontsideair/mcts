@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-
 module Game.TicTacToe
   ( ticTacToe
   )
