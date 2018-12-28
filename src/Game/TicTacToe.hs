@@ -1,7 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Game.TicTacToe
-  ( TicTacToe
+  ( ticTacToe
   )
 where
 
@@ -32,7 +32,7 @@ toggle X = O
 toggle O = X
 
 isTerminal :: TicTacToe -> Bool
-isTerminal = isJust . result
+isTerminal = isJust . result'
 
 emptyPositions :: Board -> [Position]
 emptyPositions board = catMaybes $ M.toList $ M.mapPos f board
@@ -40,23 +40,32 @@ emptyPositions board = catMaybes $ M.toList $ M.mapPos f board
   f pos Nothing = Just pos
   f pos _       = Nothing
 
-instance Game TicTacToe where
-  type Move TicTacToe = TMove
-  type Player TicTacToe = TPlayer
-  initialGame = TicTacToe initialBoard X
-  legalMoves game@(TicTacToe board _) = if isTerminal game then [] else emptyPositions board
-  turn = _turn
-  play position (TicTacToe board player) = TicTacToe (M.setElem (Just player) position board) (toggle player)
-  result (TicTacToe board _) = maybe (if isDraw then Just Draw else Nothing) (Just <$> Win)
+legalMoves' game@(TicTacToe board _) =
+  if isTerminal game then [] else emptyPositions board
+
+play' position (TicTacToe board player) =
+  TicTacToe (M.setElem (Just player) position board) (toggle player)
+
+result' (TicTacToe board _) =
+  maybe (if isDraw then Just Draw else Nothing) (Just <$> Win)
     $   headMay
     $   catMaybes
     $   isWinner
     <$> winnings board
-    where
-      isWinner [Just x, Just y, Just z] | x == y && y == z = Just x
-      isWinner _ = Nothing
+ where
+  isWinner [Just x, Just y, Just z] | x == y && y == z = Just x
+  isWinner _ = Nothing
 
-      isDraw = null $ emptyPositions board
+  isDraw = null $ emptyPositions board
 
-      winnings board = V.toList (M.getDiag board) : M.toLists board ++ M.toLists
-        (M.transpose board)
+  winnings board = V.toList (M.getDiag board) : M.toLists board ++ M.toLists
+    (M.transpose board)
+
+ticTacToe :: Game TicTacToe TMove TPlayer
+ticTacToe = Game
+  { initialGame = TicTacToe initialBoard X
+  , legalMoves  = legalMoves'
+  , turn        = _turn
+  , play        = play'
+  , result      = result'
+  }

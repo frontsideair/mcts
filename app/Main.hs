@@ -17,7 +17,6 @@ data Options = Options {
 
 main :: IO ()
 main = do
-  args                         <- getArgs
   Options { iterations, size } <- execParser opts
   result                       <- playToEnd (hamiltonicity size)
                                             iterations
