@@ -39,3 +39,4 @@ executables:
       - "-with-rtsopts=-N"
     dependencies:
       - hamiltonicity
+      - optparse-applicative

@@ -9,6 +9,6 @@ import           Data.Random                    ( sample
                                                 , randomElement
                                                 )
 
-randomPlay :: Game g m p -> Integer -> g -> IO m
+randomPlay :: Game g m p -> Int -> g -> IO m
 randomPlay Game { legalMoves } _ game =
   sample $ randomElement $ legalMoves game

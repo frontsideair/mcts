@@ -20,7 +20,6 @@ import           Data.Random                    ( sample
                                                 , shuffle
                                                 , randomElement
                                                 )
-import           System.CPUTime.Extra           ( foldIOTimeout )
 import           Control.Arrow                  ( second )
 import           Game                           ( Game(..)
                                                 , Result(Win)
@@ -141,21 +140,17 @@ maxChild = selectChild exploit
 robustChild :: GameTree g m -> m
 robustChild = selectChild _visits
 
-mctsPlay :: (Ord m, Eq p) => Game g m p -> Integer -> g -> IO m
+mctsPlay :: (Ord m, Eq p) => Game g m p -> Int -> g -> IO m
 mctsPlay g iterations game =
   robustChild <$> iterateM iterations (gameTree g game) (step g)
 
 mctsPlay'
-  :: (Ord m, Eq p)
-  => Game g m p
-  -> Integer
-  -> GameTree g m
-  -> IO (m, GameTree g m)
+  :: (Ord m, Eq p) => Game g m p -> Int -> GameTree g m -> IO (m, GameTree g m)
 mctsPlay' g iterations gameTree = do
   newTree <- iterateM iterations gameTree (step g)
   return (robustChild newTree, newTree)
 
-iterateM :: Monad m => Integer -> a -> (a -> m a) -> m a
+iterateM :: Monad m => Int -> a -> (a -> m a) -> m a
 iterateM 0 a f = return a
 iterateM n a f = do
   a' <- f a
@@ -164,7 +159,7 @@ iterateM n a f = do
 mctsPlayChan
   :: (Ord m, Eq p)
   => Game g m p
-  -> Integer
+  -> Int
   -> Chan (Message m)
   -> Chan (Message m)
   -> IO ()
@@ -183,7 +178,7 @@ mctsPlayChan g@Game { play, initialGame } iterations input output = helper
 mctsPlayChanReuse
   :: (Ord m, Eq p)
   => Game g m p
-  -> Integer
+  -> Int
   -> Chan (Message m)
   -> Chan (Message m)
   -> IO ()

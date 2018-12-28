@@ -29,14 +29,14 @@ data Game g m p = Game {
   result :: g -> Maybe (Result p)
 }
 
-type AIPlayer g m p = Game g m p -> Integer -> Chan (Message m) -> Chan (Message m) -> IO ()
+type AIPlayer g m p = Game g m p -> Int -> Chan (Message m) -> Chan (Message m) -> IO ()
 
 data Message m = Start | Move m deriving Show
 
 playToEnd
   :: Show m
   => Game g m p
-  -> Integer
+  -> Int
   -> AIPlayer g m p
   -> AIPlayer g m p
   -> IO (Result p)
