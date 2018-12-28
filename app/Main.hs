@@ -1,9 +1,5 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
-import           System.Environment             ( getArgs )
-import           Safe                           ( headMay
-                                                , readMay
-                                                )
 import           Options.Applicative
 
 import           Opponent.MCTS
