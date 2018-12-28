@@ -1,17 +1,8 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Game
-  ( Game
-  , Move
-  , Player
+  ( Game(..)
   , Result(Win, Draw)
-  , initialGame
-  , legalMoves
-  , turn
-  , play
-  , result
   , AIPlayer
   , playToEnd
   , Message(Start, Move)
@@ -30,32 +21,36 @@ import           Control.Concurrent.Chan        ( Chan
 
 data Result player = Win player | Draw deriving Show
 
-class (Ord (Move g), Eq (Player g), Show (Move g)) => Game g where
-  type Move g = m | m -> g
-  type Player g = p | p -> g
-  initialGame :: g
-  legalMoves :: g -> [Move g]
-  turn :: g -> Player g
-  play :: Move g -> g -> g
-  result :: g -> Maybe (Result (Player g))
+data Game g m p = Game {
+  initialGame :: g,
+  legalMoves :: g -> [m],
+  turn :: g -> p,
+  play :: m -> g -> g,
+  result :: g -> Maybe (Result p)
+}
 
-type AIPlayer g = Integer -> Chan (Message (Move g)) -> Chan (Message (Move g)) -> IO ()
+type AIPlayer g m p = Game g m p -> Integer -> Chan (Message m) -> Chan (Message m) -> IO ()
 
 data Message m = Start | Move m deriving Show
 
 playToEnd
-  :: Game g => Integer -> AIPlayer g -> AIPlayer g -> IO (Result (Player g))
-playToEnd iterations maker breaker = do
+  :: Show m
+  => Game g m p
+  -> Integer
+  -> AIPlayer g m p
+  -> AIPlayer g m p
+  -> IO (Result p)
+playToEnd g@Game { initialGame, result, play } iterations maker breaker = do
   makerIn    <- newChan
   makerOut   <- newChan
   breakerIn  <- newChan
   breakerOut <- newChan
-  a          <- forkIO $ maker iterations makerIn makerOut
-  b          <- forkIO $ breaker iterations breakerIn breakerOut
+  thread1    <- forkIO $ maker g iterations makerIn makerOut
+  thread2    <- forkIO $ breaker g iterations breakerIn breakerOut
   writeChan makerIn Start
   result <- helper initialGame ((makerOut, breakerIn), (breakerOut, makerIn))
-  killThread a
-  killThread b
+  killThread thread1
+  killThread thread2
   return result
  where
   helper game chans@((input, output), _) = case result game of

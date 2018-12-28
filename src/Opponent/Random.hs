@@ -1,15 +1,14 @@
+{-# LANGUAGE NamedFieldPuns #-}
 module Opponent.Random
   ( randomPlay
   )
 where
 
-import           Game                           ( Game
-                                                , Move
-                                                , legalMoves
-                                                )
+import           Game                           ( Game(..) )
 import           Data.Random                    ( sample
                                                 , randomElement
                                                 )
 
-randomPlay :: Game g => Integer -> g -> IO (Move g)
-randomPlay _ game = sample $ randomElement $ legalMoves game
+randomPlay :: Game g m p -> Integer -> g -> IO m
+randomPlay Game { legalMoves } _ game =
+  sample $ randomElement $ legalMoves game
