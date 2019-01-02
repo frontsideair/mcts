@@ -17,7 +17,7 @@ main = do
   result                       <- playToEnd (hamiltonicity size)
                                             iterations
                                             mctsPlayChanReuse
-                                            mctsPlayChan
+                                            mctsPlayChanReuse
   print result
  where
   parser =

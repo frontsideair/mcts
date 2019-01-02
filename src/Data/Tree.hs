@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Data.Tree where
 
 import           Data.Map.Strict                ( Map )
@@ -14,8 +12,8 @@ rootLabel (Node v _) = v
 subForest :: Tree k v -> [(k, Tree k v)]
 subForest (Node _ vs) = M.toList vs
 
-getLeaf :: Ord k => Tree k v -> k -> Tree k v
-getLeaf (Node _ vs) = (M.!) vs
+getLeaf :: Ord k => Tree k v -> k -> Maybe (Tree k v)
+getLeaf (Node _ vs) k = M.lookup k vs
 
 node :: v -> Tree k v
 node v = Node v M.empty

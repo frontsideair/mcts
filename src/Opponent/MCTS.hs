@@ -16,6 +16,7 @@ import           Data.Tree                      ( Tree(Node)
                                                 )
 import           Data.Ord                       ( comparing )
 import           Data.List                      ( maximumBy )
+import           Data.Maybe                     ( fromMaybe )
 import           Data.Random                    ( sample
                                                 , shuffle
                                                 , randomElement
@@ -182,14 +183,17 @@ mctsPlayChanReuse
   -> Chan (Message m)
   -> Chan (Message m)
   -> IO ()
-mctsPlayChanReuse g@Game { initialGame } iterations input output = helper
+mctsPlayChanReuse g@Game { initialGame, play } iterations input output = helper
   (gameTree g initialGame)
  where
   helper tree = do
     message <- readChan input
     let tree' = case message of
           Start  -> gameTree g initialGame
-          Move m -> getLeaf tree m
+          Move m -> getLeaf' tree m
     (move, tree'') <- mctsPlay' g iterations tree'
     writeChan output (Move move)
-    helper (getLeaf tree'' move)
+    helper (getLeaf' tree'' move)
+  getLeaf' tree move = fromMaybe
+    (gameTree g (play move (_game (rootLabel tree))))
+    (getLeaf tree move)
