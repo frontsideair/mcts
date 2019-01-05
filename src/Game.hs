@@ -9,14 +9,11 @@ module Game
   )
 where
 
-import           Data.Tuple                     ( swap )
-import           Control.Concurrent             ( forkIO
-                                                , killThread
-                                                )
-import           Control.Concurrent.Chan        ( Chan
-                                                , newChan
-                                                , readChan
-                                                , writeChan
+import           Control.Concurrent.Process     ( Process
+                                                , forkProcess
+                                                , readProcess
+                                                , writeProcess
+                                                , killProcess
                                                 )
 
 data Result player = Win player | Draw deriving Show
@@ -29,7 +26,7 @@ data Game g m p = Game {
   result :: g -> Maybe (Result p)
 }
 
-type AIPlayer g m p = Game g m p -> Int -> Chan (Message m) -> Chan (Message m) -> IO ()
+type AIPlayer g m p = Game g m p -> Int -> Process (Message m) (Message m) -> IO ()
 
 data Message m = Start | Move m deriving Show
 
@@ -41,22 +38,18 @@ playToEnd
   -> AIPlayer g m p
   -> IO (Result p)
 playToEnd g@Game { initialGame, result, play } iterations maker breaker = do
-  makerIn    <- newChan
-  makerOut   <- newChan
-  breakerIn  <- newChan
-  breakerOut <- newChan
-  thread1    <- forkIO $ maker g iterations makerIn makerOut
-  thread2    <- forkIO $ breaker g iterations breakerIn breakerOut
-  writeChan makerIn Start
-  result <- helper initialGame ((makerOut, breakerIn), (breakerOut, makerIn))
-  killThread thread1
-  killThread thread2
+  makerProcess   <- forkProcess $ maker g iterations
+  breakerProcess <- forkProcess $ breaker g iterations
+  writeProcess makerProcess Start
+  result <- helper initialGame (makerProcess, breakerProcess)
+  killProcess makerProcess
+  killProcess breakerProcess
   return result
  where
-  helper game chans@((input, output), _) = case result game of
+  helper game (process1, process2) = case result game of
     Just result -> return result
     Nothing     -> do
-      Move move <- readChan input
+      Move move <- readProcess process1
       print move
-      writeChan output (Move move)
-      helper (play move game) (swap chans)
+      writeProcess process2 (Move move)
+      helper (play move game) (process2, process1)

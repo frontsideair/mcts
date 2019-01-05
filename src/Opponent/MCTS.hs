@@ -26,9 +26,9 @@ import           Game                           ( Game(..)
                                                 , Result(Win)
                                                 , Message(Start, Move)
                                                 )
-import           Control.Concurrent.Chan        ( Chan
-                                                , readChan
-                                                , writeChan
+import           Control.Concurrent.Process     ( Process
+                                                , readProcess
+                                                , writeProcess
                                                 )
 
 data Stats = Stats { _wins :: Float, _visits :: Float }
@@ -161,38 +161,35 @@ mctsPlayChan
   :: (Ord m, Eq p)
   => Game g m p
   -> Int
-  -> Chan (Message m)
-  -> Chan (Message m)
+  -> Process (Message m) (Message m)
   -> IO ()
-mctsPlayChan g@Game { play, initialGame } iterations input output = helper
-  initialGame
+mctsPlayChan g@Game { play, initialGame } iterations process = helper initialGame
  where
   helper game = do
-    message <- readChan input
+    message <- readProcess process
     let game' = case message of
           Start  -> initialGame
           Move m -> play m game
     move <- mctsPlay g iterations game'
-    writeChan output (Move move)
+    writeProcess process (Move move)
     helper (play move game')
 
 mctsPlayChanReuse
   :: (Ord m, Eq p)
   => Game g m p
   -> Int
-  -> Chan (Message m)
-  -> Chan (Message m)
+  -> Process (Message m) (Message m)
   -> IO ()
-mctsPlayChanReuse g@Game { initialGame, play } iterations input output = helper
+mctsPlayChanReuse g@Game { initialGame, play } iterations process = helper
   (gameTree g initialGame)
  where
   helper tree = do
-    message <- readChan input
+    message <- readProcess process
     let tree' = case message of
           Start  -> gameTree g initialGame
           Move m -> getLeaf' tree m
     (move, tree'') <- mctsPlay' g iterations tree'
-    writeChan output (Move move)
+    writeProcess process (Move move)
     helper (getLeaf' tree'' move)
   getLeaf' tree move = fromMaybe
     (gameTree g (play move (_game (rootLabel tree))))
