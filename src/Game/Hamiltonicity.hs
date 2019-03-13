@@ -14,20 +14,27 @@ import           Data.Graph                     ( Graph
                                                 )
 import           Game
 
+data Turn = MakerTurn | BreakerTurn Int deriving (Show, Eq)
+
 data HPlayer = Maker | Breaker deriving (Show, Eq, Ord)
+
+turnToPlayer :: Turn -> HPlayer
+turnToPlayer MakerTurn       = Maker
+turnToPlayer (BreakerTurn _) = Breaker
 
 type Position = Edge
 
 -- TODO: Make use of symmetry
 type Board = Graph
 
-data Hamiltonicity = Hamiltonicity { _board :: Board, _turn :: HPlayer } deriving (Show, Eq)
+data Hamiltonicity = Hamiltonicity { _board :: Board, _turn :: Turn } deriving (Show, Eq)
 
 type HMove = Position
 
-toggle :: HPlayer -> HPlayer
-toggle Maker   = Breaker
-toggle Breaker = Maker
+toggle :: Int -> Turn -> Turn
+toggle _ MakerTurn = BreakerTurn 1
+toggle breakerMoves (BreakerTurn n) | n == breakerMoves = MakerTurn
+                                    | otherwise         = BreakerTurn (n + 1)
 
 isTerminal :: Hamiltonicity -> Bool
 isTerminal = isJust . result'
@@ -35,12 +42,12 @@ isTerminal = isJust . result'
 emptyPositions :: Board -> [Position]
 emptyPositions = uncoloredEdges
 
-play' position (Hamiltonicity board player) = Hamiltonicity
+play' breakerMoves position (Hamiltonicity board player) = Hamiltonicity
   (play'' player position board)
-  (toggle player)
+  (toggle breakerMoves player)
  where
-  play'' Maker   = colorMaker
-  play'' Breaker = colorBreaker
+  play'' MakerTurn       = colorMaker
+  play'' (BreakerTurn n) = colorBreaker
 
 result' (Hamiltonicity board _)
   | null (emptyPositions board) = Just (Win Breaker)
@@ -50,11 +57,11 @@ result' (Hamiltonicity board _)
 legalMoves' game@(Hamiltonicity board _) =
   if isTerminal game then [] else emptyPositions board
 
-hamiltonicity :: Int -> Game Hamiltonicity HMove HPlayer
-hamiltonicity n = Game
-  { initialGame = Hamiltonicity (complete n) Maker
+hamiltonicity :: Int -> Int -> Game Hamiltonicity HMove HPlayer
+hamiltonicity n breakerMoves = Game
+  { initialGame = Hamiltonicity (complete n) MakerTurn
   , legalMoves  = legalMoves'
-  , turn        = _turn
-  , play        = play'
+  , turn        = turnToPlayer . _turn
+  , play        = play' breakerMoves
   , result      = result'
   }

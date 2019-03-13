@@ -41,3 +41,10 @@ executables:
       - hamiltonicity
       - optparse-applicative
       - containers
+  benchmark:
+    main: Main.hs
+    source-dirs: benchmark
+    dependencies:
+      - hamiltonicity
+      - optparse-applicative
+      - containers

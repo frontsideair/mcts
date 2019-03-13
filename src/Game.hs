@@ -9,6 +9,7 @@ module Game
   )
 where
 
+import           Control.Monad                  ( when )
 import           Control.Concurrent.Process     ( Process
                                                 , forkProcess
                                                 , readProcess
@@ -26,17 +27,19 @@ data Game g m p = Game {
   result :: g -> Maybe (Result p)
 }
 
-type AIPlayer g m p = Game g m p -> Int -> Process (Message m) (Message m) -> IO ()
+type AIPlayer g m p
+  = Game g m p -> Int -> Process (Message m) (Message m) -> IO ()
 
 data Message m = Start | Move m deriving Show
 
 playToEnd
   :: (Show m, Eq p, Ord p)
-  => Game g m p
+  => Bool
+  -> Game g m p
   -> (Int, AIPlayer g m p)
   -> (Int, AIPlayer g m p)
   -> IO (Result p)
-playToEnd g@Game { initialGame, result, play } (makerIters, maker) (breakerIters, breaker)
+playToEnd logMove g@Game { initialGame, result, play } (makerIters, maker) (breakerIters, breaker)
   = do
     makerProcess   <- forkProcess $ maker g makerIters
     breakerProcess <- forkProcess $ breaker g breakerIters
@@ -50,6 +53,6 @@ playToEnd g@Game { initialGame, result, play } (makerIters, maker) (breakerIters
     Just result -> return result
     Nothing     -> do
       Move move <- readProcess process1
-      -- print move
+      when logMove $ print move
       writeProcess process2 (Move move)
       helper (play move game) (process2, process1)
