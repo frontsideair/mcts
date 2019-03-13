@@ -34,7 +34,8 @@ import           Control.Concurrent.Process     ( Process
 data Stats = Stats { _wins :: Float, _visits :: Float }
 
 instance Show Stats where
-  show (Stats wins visits) = show wins ++ "/" ++ show visits ++ "=" ++ show (wins / visits)
+  show (Stats wins visits) =
+    show wins ++ "/" ++ show visits ++ "=" ++ show (wins / visits)
 
 data State g m = State { _game :: g, _unplayedMoves :: [m], _stats :: Stats }
 
@@ -143,19 +144,17 @@ robustChild = selectChild _visits
 
 mctsPlay :: (Ord m, Eq p) => Game g m p -> Int -> g -> IO m
 mctsPlay g iterations game =
-  robustChild <$> iterateM iterations (gameTree g game) (step g)
+  robustChild <$> iterateM iterations (step g) (gameTree g game)
 
 mctsPlay'
   :: (Ord m, Eq p) => Game g m p -> Int -> GameTree g m -> IO (m, GameTree g m)
 mctsPlay' g iterations gameTree = do
-  newTree <- iterateM iterations gameTree (step g)
+  newTree <- iterateM iterations (step g) gameTree
   return (robustChild newTree, newTree)
 
-iterateM :: Monad m => Int -> a -> (a -> m a) -> m a
-iterateM 0 a f = return a
-iterateM n a f = do
-  a' <- f a
-  iterateM (n - 1) a' f
+iterateM :: (Monad m, Integral i) => i -> (a -> m a) -> a -> m a
+iterateM 0 f a = return a
+iterateM n f a = f a >>= iterateM (n - 1) f
 
 mctsPlayChan
   :: (Ord m, Eq p)
@@ -163,7 +162,8 @@ mctsPlayChan
   -> Int
   -> Process (Message m) (Message m)
   -> IO ()
-mctsPlayChan g@Game { play, initialGame } iterations process = helper initialGame
+mctsPlayChan g@Game { play, initialGame } iterations process = helper
+  initialGame
  where
   helper game = do
     message <- readProcess process

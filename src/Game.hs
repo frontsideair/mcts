@@ -16,7 +16,7 @@ import           Control.Concurrent.Process     ( Process
                                                 , killProcess
                                                 )
 
-data Result player = Win player | Draw deriving Show
+data Result player = Win player | Draw deriving (Show, Eq, Ord)
 
 data Game g m p = Game {
   initialGame :: g,
@@ -31,25 +31,25 @@ type AIPlayer g m p = Game g m p -> Int -> Process (Message m) (Message m) -> IO
 data Message m = Start | Move m deriving Show
 
 playToEnd
-  :: Show m
+  :: (Show m, Eq p, Ord p)
   => Game g m p
-  -> Int
-  -> AIPlayer g m p
-  -> AIPlayer g m p
+  -> (Int, AIPlayer g m p)
+  -> (Int, AIPlayer g m p)
   -> IO (Result p)
-playToEnd g@Game { initialGame, result, play } iterations maker breaker = do
-  makerProcess   <- forkProcess $ maker g iterations
-  breakerProcess <- forkProcess $ breaker g iterations
-  writeProcess makerProcess Start
-  result <- helper initialGame (makerProcess, breakerProcess)
-  killProcess makerProcess
-  killProcess breakerProcess
-  return result
+playToEnd g@Game { initialGame, result, play } (makerIters, maker) (breakerIters, breaker)
+  = do
+    makerProcess   <- forkProcess $ maker g makerIters
+    breakerProcess <- forkProcess $ breaker g breakerIters
+    writeProcess makerProcess Start
+    result <- helper initialGame (makerProcess, breakerProcess)
+    killProcess makerProcess
+    killProcess breakerProcess
+    return result
  where
   helper game (process1, process2) = case result game of
     Just result -> return result
     Nothing     -> do
       Move move <- readProcess process1
-      print move
+      -- print move
       writeProcess process2 (Move move)
       helper (play move game) (process2, process1)

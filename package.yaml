@@ -40,3 +40,4 @@ executables:
     dependencies:
       - hamiltonicity
       - optparse-applicative
+      - containers
