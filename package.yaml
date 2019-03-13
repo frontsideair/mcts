@@ -40,7 +40,6 @@ executables:
     dependencies:
       - hamiltonicity
       - optparse-applicative
-      - containers
   benchmark:
     main: Main.hs
     source-dirs: benchmark
