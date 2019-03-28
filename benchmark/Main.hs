@@ -48,7 +48,6 @@ go (makerIters, breakerIters, makerReuse, breakerReuse, size, breakerMoves) =
     print $ frequency results
     putStrLn ""
  where
-  mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
   app = playToEnd False
                   (hamiltonicity size breakerMoves)
                   (mcts makerReuse makerIters)

@@ -1,8 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Opponent.MCTS
-  ( mctsPlayChan
-  , mctsPlayChanReuse
+  ( mcts
   )
 where
 
@@ -25,6 +24,7 @@ import           Control.Arrow                  ( second )
 import           Game                           ( Game(..)
                                                 , Result(Win)
                                                 , Message(Start, Move)
+                                                , AIPlayer
                                                 )
 import           Control.Concurrent.Process     ( Process
                                                 , readProcess
@@ -156,12 +156,7 @@ iterateM :: (Monad m, Integral i) => i -> (a -> m a) -> a -> m a
 iterateM 0 f a = return a
 iterateM n f a = f a >>= iterateM (n - 1) f
 
-mctsPlayChan
-  :: (Ord m, Eq p)
-  => Int
-  -> Game g m p
-  -> Process (Message m) (Message m)
-  -> IO ()
+mctsPlayChan :: (Ord m, Eq p) => Int -> AIPlayer g m p
 mctsPlayChan iterations g@Game { play, initialGame } process = helper
   initialGame
  where
@@ -174,12 +169,7 @@ mctsPlayChan iterations g@Game { play, initialGame } process = helper
     writeProcess process (Move move)
     helper (play move game')
 
-mctsPlayChanReuse
-  :: (Ord m, Eq p)
-  => Int
-  -> Game g m p
-  -> Process (Message m) (Message m)
-  -> IO ()
+mctsPlayChanReuse :: (Ord m, Eq p) => Int -> AIPlayer g m p
 mctsPlayChanReuse iterations g@Game { initialGame, play } process = helper
   (gameTree g initialGame)
  where
@@ -194,3 +184,6 @@ mctsPlayChanReuse iterations g@Game { initialGame, play } process = helper
   getLeaf' tree move = fromMaybe
     (gameTree g (play move (_game (rootLabel tree))))
     (getLeaf tree move)
+
+mcts :: (Ord m, Eq p) => Bool -> Int -> AIPlayer g m p
+mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan

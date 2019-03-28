@@ -21,12 +21,11 @@ main :: IO ()
 main = do
   Options { size, makerReuse, breakerReuse, makerIters, breakerIters, breakerMoves } <-
     execParser opts
-  result <- playToEnd True -- ticTacToe minimaxChan minimaxChan
-                      (hamiltonicity size breakerMoves)
-                      (mcts makerReuse makerIters)
-                      (mcts breakerReuse breakerIters)
+  result <- playToEnd True
+                      (hamiltonicity size breakerMoves) -- ticTacToe
+                      (mcts makerReuse makerIters) -- minimaxChan
+                      (mcts breakerReuse breakerIters) -- minimaxChan
   print result
-  where mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
 
 opts :: ParserInfo Options
 opts = info (parser <**> helper) mempty

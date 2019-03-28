@@ -1,8 +1,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
+
 module Opponent.Minimax
   ( minimaxChan
-  , minimax
-  , eval
   )
 where
 
@@ -11,6 +10,7 @@ import           Data.Ord                       ( comparing )
 import           Game                           ( Game(..)
                                                 , Result(Win, Draw)
                                                 , Message(Start, Move)
+                                                , AIPlayer
                                                 )
 import           Control.Concurrent.Process     ( Process
                                                 , readProcess
@@ -27,7 +27,7 @@ minimax :: Eq p => Game g m p -> g -> IO m
 minimax g@Game { play, legalMoves } game =
   return $ maximumBy (comparing (eval g . flip play game)) $ legalMoves game
 
-minimaxChan :: Eq p => Game g m p -> Process (Message m) (Message m) -> IO ()
+minimaxChan :: Eq p => AIPlayer g m p
 minimaxChan g@Game { initialGame, play } process = helper initialGame
  where
   helper game = do
