@@ -60,10 +60,9 @@ result' (TicTacToe board _) =
     (M.transpose board)
 
 ticTacToe :: Game TicTacToe TMove TPlayer
-ticTacToe = Game
-  { initialGame = TicTacToe initialBoard X
-  , legalMoves  = legalMoves'
-  , turn        = _turn
-  , play        = play'
-  , result      = result'
-  }
+ticTacToe = Game { initialGame = TicTacToe initialBoard X
+                 , legalMoves  = legalMoves'
+                 , turn        = _turn
+                 , play        = play'
+                 , result      = result'
+                 }

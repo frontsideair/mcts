@@ -19,7 +19,6 @@ data Options = Options {
 } deriving Show
 
 main :: IO ()
--- main = execParser opts >>= app
 main = do
   Options { varyMaker, size, breakerMoves } <- execParser opts
   traverse_ go $ do
@@ -27,7 +26,6 @@ main = do
     let fixedIters = 16000
     variedReuse <- [False, True]
     let fixedReuse = False
-    -- size <- [6, 7, 8]
     return $ if varyMaker
       then
         (variedIters, fixedIters, variedReuse, fixedReuse, size, breakerMoves)
@@ -56,25 +54,27 @@ go (makerIters, breakerIters, makerReuse, breakerReuse, size, breakerMoves) =
                   (mcts makerReuse makerIters)
                   (mcts breakerReuse breakerIters)
 
-parser =
-  Options
-    <$> switch (long "vary-maker" <> help "Should vary maker")
-    <*> option
-          auto
-          (  long "size"
-          <> short 's'
-          <> help "Size of complete graph"
-          <> showDefault
-          <> value 7
-          <> metavar "INT"
-          )
-    <*> option
-          auto
-          (  long "breaker-moves"
-          <> short 'b'
-          <> help "Number of moves breaker can make in a turn"
-          <> showDefault
-          <> value 1
-          <> metavar "INT"
-          )
+opts :: ParserInfo Options
 opts = info (parser <**> helper) mempty
+ where
+  parser =
+    Options
+      <$> switch (long "vary-maker" <> help "Should vary maker")
+      <*> option
+            auto
+            (  long "size"
+            <> short 's'
+            <> help "Size of complete graph"
+            <> showDefault
+            <> value 7
+            <> metavar "INT"
+            )
+      <*> option
+            auto
+            (  long "breaker-moves"
+            <> short 'b'
+            <> help "Number of moves breaker can make in a turn"
+            <> showDefault
+            <> value 1
+            <> metavar "INT"
+            )

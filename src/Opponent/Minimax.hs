@@ -27,8 +27,7 @@ minimax :: Eq p => Game g m p -> g -> IO m
 minimax g@Game { play, legalMoves } game =
   return $ maximumBy (comparing (eval g . flip play game)) $ legalMoves game
 
-minimaxChan
-  :: Eq p => Game g m p -> Process (Message m) (Message m) -> IO ()
+minimaxChan :: Eq p => Game g m p -> Process (Message m) (Message m) -> IO ()
 minimaxChan g@Game { initialGame, play } process = helper initialGame
  where
   helper game = do
