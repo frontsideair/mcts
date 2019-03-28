@@ -12,7 +12,7 @@ import qualified Data.Vector                   as V
 import           Safe                           ( headMay )
 import           Game
 
-data TPlayer = X | O deriving (Show, Eq)
+data TPlayer = X | O deriving (Show, Eq, Ord)
 
 type Position = (Int, Int)
 

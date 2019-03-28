@@ -37,12 +37,18 @@ executables:
       - "-threaded"
       - "-rtsopts"
       - "-with-rtsopts=-N"
+      - "-fllvm"
     dependencies:
       - hamiltonicity
       - optparse-applicative
   benchmark:
     main: Main.hs
     source-dirs: benchmark
+    ghc-options:
+      - "-threaded"
+      - "-rtsopts"
+      - "-with-rtsopts=-N"
+      - "-fllvm"
     dependencies:
       - hamiltonicity
       - optparse-applicative

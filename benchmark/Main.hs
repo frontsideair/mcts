@@ -51,13 +51,10 @@ go (makerIters, breakerIters, makerReuse, breakerReuse, size, breakerMoves) =
     putStrLn ""
  where
   mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
-  app = do
-    let maker   = mcts makerReuse
-    let breaker = mcts breakerReuse
-    playToEnd False
-              (hamiltonicity size breakerMoves)
-              (makerIters  , maker)
-              (breakerIters, breaker)
+  app = playToEnd False
+                  (hamiltonicity size breakerMoves)
+                  (mcts makerReuse makerIters)
+                  (mcts breakerReuse breakerIters)
 
 parser =
   Options

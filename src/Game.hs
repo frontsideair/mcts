@@ -27,8 +27,7 @@ data Game g m p = Game {
   result :: g -> Maybe (Result p)
 }
 
-type AIPlayer g m p
-  = Game g m p -> Int -> Process (Message m) (Message m) -> IO ()
+type AIPlayer g m p = Game g m p -> Process (Message m) (Message m) -> IO ()
 
 data Message m = Start | Move m deriving Show
 
@@ -36,18 +35,17 @@ playToEnd
   :: (Show m, Eq p, Ord p)
   => Bool
   -> Game g m p
-  -> (Int, AIPlayer g m p)
-  -> (Int, AIPlayer g m p)
+  -> AIPlayer g m p
+  -> AIPlayer g m p
   -> IO (Result p)
-playToEnd logMove g@Game { initialGame, result, play } (makerIters, maker) (breakerIters, breaker)
-  = do
-    makerProcess   <- forkProcess $ maker g makerIters
-    breakerProcess <- forkProcess $ breaker g breakerIters
-    writeProcess makerProcess Start
-    result <- helper initialGame (makerProcess, breakerProcess)
-    killProcess makerProcess
-    killProcess breakerProcess
-    return result
+playToEnd logMove g@Game { initialGame, result, play } maker breaker = do
+  makerProcess   <- forkProcess $ maker g
+  breakerProcess <- forkProcess $ breaker g
+  writeProcess makerProcess Start
+  result <- helper initialGame (makerProcess, breakerProcess)
+  killProcess makerProcess
+  killProcess breakerProcess
+  return result
  where
   helper game (process1, process2) = case result game of
     Just result -> return result

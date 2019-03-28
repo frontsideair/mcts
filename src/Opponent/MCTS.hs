@@ -158,11 +158,11 @@ iterateM n f a = f a >>= iterateM (n - 1) f
 
 mctsPlayChan
   :: (Ord m, Eq p)
-  => Game g m p
-  -> Int
+  => Int
+  -> Game g m p
   -> Process (Message m) (Message m)
   -> IO ()
-mctsPlayChan g@Game { play, initialGame } iterations process = helper
+mctsPlayChan iterations g@Game { play, initialGame } process = helper
   initialGame
  where
   helper game = do
@@ -176,11 +176,11 @@ mctsPlayChan g@Game { play, initialGame } iterations process = helper
 
 mctsPlayChanReuse
   :: (Ord m, Eq p)
-  => Game g m p
-  -> Int
+  => Int
+  -> Game g m p
   -> Process (Message m) (Message m)
   -> IO ()
-mctsPlayChanReuse g@Game { initialGame, play } iterations process = helper
+mctsPlayChanReuse iterations g@Game { initialGame, play } process = helper
   (gameTree g initialGame)
  where
   helper tree = do

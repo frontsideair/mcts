@@ -3,7 +3,9 @@
 import           Options.Applicative
 
 import           Opponent.MCTS
+import           Opponent.Minimax
 import           Game.Hamiltonicity
+import           Game.TicTacToe
 import           Game
 
 data Options = Options {
@@ -21,8 +23,8 @@ main = do
     execParser opts
   result <- playToEnd True
                       (hamiltonicity size breakerMoves)
-                      (makerIters  , mcts makerReuse)
-                      (breakerIters, mcts breakerReuse)
+                      (mcts makerReuse makerIters)
+                      (mcts breakerReuse breakerIters)
   print result
   where mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
 
