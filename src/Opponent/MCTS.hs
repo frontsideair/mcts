@@ -52,8 +52,8 @@ gameTree :: Game g m p -> g -> GameTree g m
 gameTree g game = node $ state g game
 
 ucb1 :: Float -> Float -> Stats -> Float
-ucb1 c rootVisits stats =
-  exploit stats + c * sqrt (2 * log rootVisits / _visits stats)
+ucb1 c parentVisits stats =
+  exploit stats + c * sqrt (2 * log parentVisits / _visits stats)
 
 exploit :: Stats -> Float
 exploit (Stats wins visits) = wins / visits
@@ -107,24 +107,26 @@ select
   :: (Ord m, Eq p)
   => Game g m p
   -> Float
-  -> Float
   -> GameTree g m
   -> IO (GameTree g m, Result p)
-select g@Game { turn } c rv tree@(Node state leaves) =
+select g@Game { turn } c tree@(Node state leaves) =
   backprop' <$> case selection g tree of
     Terminal result -> return (tree, result)
     Expand          -> expand g tree
     Select          -> do
-      let Just (move, leaf) = findMax (ucb1 c rv . _stats . rootLabel) leaves
-      (leaf', result) <- select g c rv leaf
+      let parentVisits = (_visits . _stats) state
+      let Just (move, leaf) =
+            findMax (ucb1 c parentVisits . _stats . rootLabel) leaves
+      (leaf', result) <- select g c leaf
       return (Node state (insert move leaf' leaves), result)
  where
   backprop' (Node (State game moves stats) leaves, result) =
     (Node (State game moves (backprop (turn game) result stats)) leaves, result)
 
-step :: (Ord m, Eq p) => Game g m p -> Float -> GameTree g m -> IO (GameTree g m)
+step
+  :: (Ord m, Eq p) => Game g m p -> Float -> GameTree g m -> IO (GameTree g m)
 step g c tree = do
-  (tree', _) <- select g c (_visits $ _stats $ rootLabel tree) tree
+  (tree', _) <- select g c tree
   return tree'
 
 rootStats :: GameTree g m -> Stats
@@ -148,7 +150,12 @@ mctsPlay g c iterations game =
   robustChild <$> iterateM iterations (step g c) (gameTree g game)
 
 mctsPlay'
-  :: (Ord m, Eq p) => Game g m p -> Float -> Int -> GameTree g m -> IO (m, GameTree g m)
+  :: (Ord m, Eq p)
+  => Game g m p
+  -> Float
+  -> Int
+  -> GameTree g m
+  -> IO (m, GameTree g m)
 mctsPlay' g c iterations gameTree = do
   newTree <- iterateM iterations (step g c) gameTree
   return (robustChild newTree, newTree)
