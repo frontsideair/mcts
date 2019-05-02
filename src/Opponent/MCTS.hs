@@ -51,9 +51,9 @@ state Game { legalMoves } game = State game (legalMoves game) initialStats
 gameTree :: Game g m p -> g -> GameTree g m
 gameTree g game = node $ state g game
 
-ucb1 :: Float -> Stats -> Float
-ucb1 rootVisits stats =
-  exploit stats + sqrt (2 * log rootVisits / _visits stats)
+ucb1 :: Float -> Float -> Stats -> Float
+ucb1 c rootVisits stats =
+  exploit stats + c * sqrt (2 * log rootVisits / _visits stats)
 
 exploit :: Stats -> Float
 exploit (Stats wins visits) = wins / visits
@@ -107,23 +107,24 @@ select
   :: (Ord m, Eq p)
   => Game g m p
   -> Float
+  -> Float
   -> GameTree g m
   -> IO (GameTree g m, Result p)
-select g@Game { turn } rv tree@(Node state leaves) =
+select g@Game { turn } c rv tree@(Node state leaves) =
   backprop' <$> case selection g tree of
     Terminal result -> return (tree, result)
     Expand          -> expand g tree
     Select          -> do
-      let Just (move, leaf) = findMax (ucb1 rv . _stats . rootLabel) leaves
-      (leaf', result) <- select g rv leaf
+      let Just (move, leaf) = findMax (ucb1 c rv . _stats . rootLabel) leaves
+      (leaf', result) <- select g c rv leaf
       return (Node state (insert move leaf' leaves), result)
  where
   backprop' (Node (State game moves stats) leaves, result) =
     (Node (State game moves (backprop (turn game) result stats)) leaves, result)
 
-step :: (Ord m, Eq p) => Game g m p -> GameTree g m -> IO (GameTree g m)
-step g tree = do
-  (tree', _) <- select g (_visits $ _stats $ rootLabel tree) tree
+step :: (Ord m, Eq p) => Game g m p -> Float -> GameTree g m -> IO (GameTree g m)
+step g c tree = do
+  (tree', _) <- select g c (_visits $ _stats $ rootLabel tree) tree
   return tree'
 
 rootStats :: GameTree g m -> Stats
@@ -142,22 +143,22 @@ maxChild = selectChild exploit
 robustChild :: GameTree g m -> m
 robustChild = selectChild _visits
 
-mctsPlay :: (Ord m, Eq p) => Game g m p -> Int -> g -> IO m
-mctsPlay g iterations game =
-  robustChild <$> iterateM iterations (step g) (gameTree g game)
+mctsPlay :: (Ord m, Eq p) => Game g m p -> Float -> Int -> g -> IO m
+mctsPlay g c iterations game =
+  robustChild <$> iterateM iterations (step g c) (gameTree g game)
 
 mctsPlay'
-  :: (Ord m, Eq p) => Game g m p -> Int -> GameTree g m -> IO (m, GameTree g m)
-mctsPlay' g iterations gameTree = do
-  newTree <- iterateM iterations (step g) gameTree
+  :: (Ord m, Eq p) => Game g m p -> Float -> Int -> GameTree g m -> IO (m, GameTree g m)
+mctsPlay' g c iterations gameTree = do
+  newTree <- iterateM iterations (step g c) gameTree
   return (robustChild newTree, newTree)
 
 iterateM :: (Monad m, Integral i) => i -> (a -> m a) -> a -> m a
 iterateM 0 f a = return a
 iterateM n f a = f a >>= iterateM (n - 1) f
 
-mctsPlayChan :: (Ord m, Eq p) => Int -> AIPlayer g m p
-mctsPlayChan iterations g@Game { play, initialGame } process = helper
+mctsPlayChan :: (Ord m, Eq p) => Float -> Int -> AIPlayer g m p
+mctsPlayChan c iterations g@Game { play, initialGame } process = helper
   initialGame
  where
   helper game = do
@@ -165,12 +166,12 @@ mctsPlayChan iterations g@Game { play, initialGame } process = helper
     let game' = case message of
           Start  -> initialGame
           Move m -> play m game
-    move <- mctsPlay g iterations game'
+    move <- mctsPlay g c iterations game'
     writeProcess process (Move move)
     helper (play move game')
 
-mctsPlayChanReuse :: (Ord m, Eq p) => Int -> AIPlayer g m p
-mctsPlayChanReuse iterations g@Game { initialGame, play } process = helper
+mctsPlayChanReuse :: (Ord m, Eq p) => Float -> Int -> AIPlayer g m p
+mctsPlayChanReuse c iterations g@Game { initialGame, play } process = helper
   (gameTree g initialGame)
  where
   helper tree = do
@@ -178,12 +179,12 @@ mctsPlayChanReuse iterations g@Game { initialGame, play } process = helper
     let tree' = case message of
           Start  -> gameTree g initialGame
           Move m -> getLeaf' tree m
-    (move, tree'') <- mctsPlay' g iterations tree'
+    (move, tree'') <- mctsPlay' g c iterations tree'
     writeProcess process (Move move)
     helper (getLeaf' tree'' move)
   getLeaf' tree move = fromMaybe
     (gameTree g (play move (_game (rootLabel tree))))
     (getLeaf tree move)
 
-mcts :: (Ord m, Eq p) => Bool -> Int -> AIPlayer g m p
+mcts :: (Ord m, Eq p) => Bool -> Float -> Int -> AIPlayer g m p
 mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan

@@ -50,8 +50,8 @@ go (makerIters, breakerIters, makerReuse, breakerReuse, size, breakerMoves) =
  where
   app = playToEnd False
                   (hamiltonicity size breakerMoves)
-                  (mcts makerReuse makerIters)
-                  (mcts breakerReuse breakerIters)
+                  (mcts makerReuse 0.7 makerIters)
+                  (mcts breakerReuse 0.7 breakerIters)
 
 opts :: ParserInfo Options
 opts = info (parser <**> helper) mempty

@@ -35,8 +35,8 @@ isTerminal = isJust . result'
 emptyPositions :: Board -> [Position]
 emptyPositions board = catMaybes $ M.toList $ M.mapPos f board
  where
-  f pos Nothing = Just pos
-  f pos _       = Nothing
+  f pos Nothing  = Just pos
+  f pos (Just _) = Nothing
 
 legalMoves' game@(TicTacToe board _) =
   if isTerminal game then [] else emptyPositions board

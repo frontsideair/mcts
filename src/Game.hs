@@ -38,13 +38,13 @@ playToEnd
   -> AIPlayer g m p
   -> AIPlayer g m p
   -> IO (Result p)
-playToEnd logMove g@Game { initialGame, result, play } maker breaker = do
-  makerProcess   <- forkProcess $ maker g
-  breakerProcess <- forkProcess $ breaker g
-  writeProcess makerProcess Start
-  result <- helper initialGame (makerProcess, breakerProcess)
-  killProcess makerProcess
-  killProcess breakerProcess
+playToEnd logMove g@Game { initialGame, result, play } p1 p2 = do
+  p1Process <- forkProcess $ p1 g
+  p2Process <- forkProcess $ p2 g
+  writeProcess p1Process Start
+  result <- helper initialGame (p1Process, p2Process)
+  killProcess p1Process
+  killProcess p2Process
   return result
  where
   helper game (process1, process2) = case result game of
