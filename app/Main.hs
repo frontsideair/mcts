@@ -13,18 +13,22 @@ data Options = Options {
   makerReuse :: Bool,
   breakerReuse :: Bool,
   makerIters :: Int,
-  breakerIters :: Int,
-  breakerMoves :: Int
+  breakerIters :: Int
 } deriving Show
+
+defaultParams :: Params
+defaultParams =
+  Params { reuse = False, iters = 1000, constant = 0.7, robust = True }
 
 main :: IO ()
 main = do
-  Options { size, makerReuse, breakerReuse, makerIters, breakerIters, breakerMoves } <-
+  Options { size, makerReuse, breakerReuse, makerIters, breakerIters } <-
     execParser opts
-  result <- playToEnd True
-                      (hamiltonicity size breakerMoves) -- ticTacToe
-                      (mcts makerReuse 0.7 robustChild makerIters) -- minimaxChan
-                      (mcts breakerReuse 0.7 robustChild breakerIters) -- minimaxChan
+  result <- playToEnd
+    True
+    (hamiltonicity size 1) -- ticTacToe
+    (mcts (defaultParams { reuse = makerReuse, iters = makerIters })) -- minimaxChan
+    (mcts (defaultParams { reuse = breakerReuse, iters = breakerIters })) -- minimaxChan
   print result
 
 opts :: ParserInfo Options
@@ -57,13 +61,5 @@ opts = info (parser <**> helper) mempty
             <> help "Number of iterations for breaker"
             <> showDefault
             <> value 1000
-            <> metavar "INT"
-            )
-      <*> option
-            auto
-            (  long "breaker-moves"
-            <> help "Number of moves breaker can make in a turn"
-            <> showDefault
-            <> value 1
             <> metavar "INT"
             )

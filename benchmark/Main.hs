@@ -13,53 +13,50 @@ frequency :: (Ord a) => [a] -> [(a, Int)]
 frequency xs = M.toList (M.fromListWith (+) [ (x, 1) | x <- xs ])
 
 data Options = Options {
-  varyMaker :: Bool,
   size :: Int,
-  breakerMoves :: Int
+  vary :: Vary
 } deriving Show
+
+data Vary = Reuse | Iters | Constant | Robust deriving Show
+
+defaultParams :: Params
+defaultParams =
+  Params { reuse = False, iters = 1000, constant = 0.7, robust = True }
+
+variedParams :: Vary -> [Params]
+variedParams Reuse = [ defaultParams { reuse } | reuse <- [False, True] ]
+variedParams Iters =
+  [ defaultParams { iters } | iters <- [1000, 2000, 4000, 8000, 16000] ]
+variedParams Constant =
+  [ defaultParams { constant } | constant <- [0.1, 0.3, 0.5, 0.7, 0.9] ]
+variedParams Robust = [ defaultParams { robust } | robust <- [True, False] ]
 
 main :: IO ()
 main = do
-  Options { varyMaker, size, breakerMoves } <- execParser opts
-  traverse_ go $ do
-    variedIters <- [1000, 2000, 4000, 8000, 16000, 32000, 64000]
-    let fixedIters = 16000
-    variedReuse <- [False, True]
-    let fixedReuse = False
-    return $ if varyMaker
-      then
-        (variedIters, fixedIters, variedReuse, fixedReuse, size, breakerMoves)
-      else
-        (fixedIters, variedIters, fixedReuse, variedReuse, size, breakerMoves)
+  Options { size, vary } <- execParser opts
+  putStrLn ("Graph: " ++ show size)
+  traverse_ (go size) $ variedParams vary
 
-go :: (Int, Int, Bool, Bool, Int, Int) -> IO ()
-go (makerIters, breakerIters, makerReuse, breakerReuse, size, breakerMoves) =
-  do
-    putStrLn ("Graph: " ++ show size)
-    putStrLn
-      ("Maker iters: " ++ show makerIters ++ ", reuse: " ++ show makerReuse)
-    putStrLn
-      (  "Breaker iters: "
-      ++ show breakerIters
-      ++ ", reuse: "
-      ++ show breakerReuse
-      )
-    results <- forM [1 .. 200] (const app)
-    print $ frequency results
-    putStrLn ""
+go :: Int -> Params -> IO ()
+go size variedParams = do
+  putStrLn ("Varied: " ++ show variedParams)
+  putStrLn ("Default: " ++ show defaultParams)
+  results1 <- forM [1 .. 50] (const (app varied def))
+  results2 <- forM [1 .. 50] (const (app def varied))
+  print $ frequency [results1 ++ results2]
+  putStrLn ""
  where
-  app = playToEnd False
-                  (hamiltonicity size breakerMoves)
-                  (mcts makerReuse 0.7 robustChild makerIters)
-                  (mcts breakerReuse 0.7 robustChild breakerIters)
+  app    = playToEnd False (hamiltonicity size 1)
+  varied = mcts variedParams
+  def    = mcts defaultParams
+
 
 opts :: ParserInfo Options
 opts = info (parser <**> helper) mempty
  where
   parser =
     Options
-      <$> switch (long "vary-maker" <> help "Should vary maker")
-      <*> option
+      <$> option
             auto
             (  long "size"
             <> short 's'
@@ -68,12 +65,8 @@ opts = info (parser <**> helper) mempty
             <> value 7
             <> metavar "INT"
             )
-      <*> option
-            auto
-            (  long "breaker-moves"
-            <> short 'b'
-            <> help "Number of moves breaker can make in a turn"
-            <> showDefault
-            <> value 1
-            <> metavar "INT"
-            )
+      <*> (   flag' Reuse    (long "reuse")
+          <|> flag' Iters    (long "iters")
+          <|> flag' Constant (long "constant")
+          <|> flag' Robust   (long "robust")
+          )

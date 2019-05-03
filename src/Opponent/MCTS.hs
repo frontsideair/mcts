@@ -2,8 +2,7 @@
 
 module Opponent.MCTS
   ( mcts
-  , maxChild
-  , robustChild
+  , Params(..)
   )
 where
 
@@ -200,5 +199,14 @@ mctsPlayChanReuse c strategy iterations g@Game { initialGame, play } process =
     (gameTree g (play move (_game (rootLabel tree))))
     (getLeaf tree move)
 
-mcts :: (Ord m, Eq p) => Bool -> Float -> Strategy g m -> Int -> AIPlayer g m p
-mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
+data Params = Params {
+  reuse :: Bool,
+  iters :: Int,
+  constant :: Float,
+  robust :: Bool
+} deriving Show
+
+mcts :: (Ord m, Eq p) => Params -> AIPlayer g m p
+mcts Params { reuse, iters, constant, robust } = mcts' constant strategy iters
+  where mcts' = if reuse then mctsPlayChanReuse else mctsPlayChan
+        strategy = if robust then robustChild else maxChild
