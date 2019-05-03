@@ -21,12 +21,14 @@ data Vary = Reuse | Iters | Constant | Robust deriving Show
 
 defaultParams :: Params
 defaultParams =
-  Params { reuse = False, iters = 1000, constant = 0.7, robust = True }
+  Params { reuse = False, iters = 8000, constant = 0.7, robust = True }
 
 variedParams :: Vary -> [Params]
 variedParams Reuse = [ defaultParams { reuse } | reuse <- [False, True] ]
 variedParams Iters =
-  [ defaultParams { iters } | iters <- [1000, 2000, 4000, 8000, 16000] ]
+  [ defaultParams { iters }
+  | iters <- [1000, 2000, 4000, 8000, 16000, 32000, 64000]
+  ]
 variedParams Constant =
   [ defaultParams { constant } | constant <- [0.1, 0.3, 0.5, 0.7, 0.9] ]
 variedParams Robust = [ defaultParams { robust } | robust <- [True, False] ]
