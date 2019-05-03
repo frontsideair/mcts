@@ -23,8 +23,8 @@ main = do
     execParser opts
   result <- playToEnd True
                       (hamiltonicity size breakerMoves) -- ticTacToe
-                      (mcts makerReuse 0.7 makerIters) -- minimaxChan
-                      (mcts breakerReuse 0.7 breakerIters) -- minimaxChan
+                      (mcts makerReuse 0.7 robustChild makerIters) -- minimaxChan
+                      (mcts breakerReuse 0.7 robustChild breakerIters) -- minimaxChan
   print result
 
 opts :: ParserInfo Options

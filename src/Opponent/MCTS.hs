@@ -2,6 +2,8 @@
 
 module Opponent.MCTS
   ( mcts
+  , maxChild
+  , robustChild
   )
 where
 
@@ -139,59 +141,64 @@ selectChild :: (Stats -> Float) -> GameTree g m -> m
 selectChild strategy tree = move
   where (move, _) = maximumBy (comparing (strategy . snd)) (stats tree)
 
-maxChild :: GameTree g m -> m
+type Strategy g m = GameTree g m -> m
+
+maxChild :: Strategy g m
 maxChild = selectChild exploit
 
-robustChild :: GameTree g m -> m
+robustChild :: Strategy g m
 robustChild = selectChild _visits
 
-mctsPlay :: (Ord m, Eq p) => Game g m p -> Float -> Int -> g -> IO m
-mctsPlay g c iterations game =
-  robustChild <$> iterateM iterations (step g c) (gameTree g game)
+mctsPlay
+  :: (Ord m, Eq p) => Game g m p -> Float -> Strategy g m -> Int -> g -> IO m
+mctsPlay g c strategy iterations game =
+  strategy <$> iterateM iterations (step g c) (gameTree g game)
 
 mctsPlay'
   :: (Ord m, Eq p)
   => Game g m p
   -> Float
+  -> Strategy g m
   -> Int
   -> GameTree g m
   -> IO (m, GameTree g m)
-mctsPlay' g c iterations gameTree = do
+mctsPlay' g c strategy iterations gameTree = do
   newTree <- iterateM iterations (step g c) gameTree
-  return (robustChild newTree, newTree)
+  return (strategy newTree, newTree)
 
 iterateM :: (Monad m, Integral i) => i -> (a -> m a) -> a -> m a
 iterateM 0 f a = return a
 iterateM n f a = f a >>= iterateM (n - 1) f
 
-mctsPlayChan :: (Ord m, Eq p) => Float -> Int -> AIPlayer g m p
-mctsPlayChan c iterations g@Game { play, initialGame } process = helper
-  initialGame
+mctsPlayChan :: (Ord m, Eq p) => Float -> Strategy g m -> Int -> AIPlayer g m p
+mctsPlayChan c strategy iterations g@Game { play, initialGame } process =
+  helper initialGame
  where
   helper game = do
     message <- readProcess process
     let game' = case message of
           Start  -> initialGame
           Move m -> play m game
-    move <- mctsPlay g c iterations game'
+    move <- mctsPlay g c strategy iterations game'
     writeProcess process (Move move)
     helper (play move game')
 
-mctsPlayChanReuse :: (Ord m, Eq p) => Float -> Int -> AIPlayer g m p
-mctsPlayChanReuse c iterations g@Game { initialGame, play } process = helper
-  (gameTree g initialGame)
+mctsPlayChanReuse
+  :: (Ord m, Eq p) => Float -> Strategy g m -> Int -> AIPlayer g m p
+mctsPlayChanReuse c strategy iterations g@Game { initialGame, play } process =
+  helper (gameTree g initialGame)
  where
   helper tree = do
     message <- readProcess process
     let tree' = case message of
           Start  -> gameTree g initialGame
           Move m -> getLeaf' tree m
-    (move, tree'') <- mctsPlay' g c iterations tree'
+    (move, tree'') <- mctsPlay' g c strategy iterations tree'
     writeProcess process (Move move)
     helper (getLeaf' tree'' move)
   getLeaf' tree move = fromMaybe
     (gameTree g (play move (_game (rootLabel tree))))
     (getLeaf tree move)
 
-mcts :: (Ord m, Eq p) => Bool -> Float -> Int -> AIPlayer g m p
+mcts :: (Ord m, Eq p) => Bool -> Float -> Strategy g m -> Int -> AIPlayer g m p
 mcts reuse = if reuse then mctsPlayChanReuse else mctsPlayChan
