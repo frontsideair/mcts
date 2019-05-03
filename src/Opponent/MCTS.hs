@@ -55,7 +55,7 @@ gameTree g game = node $ state g game
 
 ucb1 :: Float -> Float -> Stats -> Float
 ucb1 c parentVisits stats =
-  exploit stats + c * sqrt (2 * log parentVisits / _visits stats)
+  exploit stats + 2 * c * sqrt (log parentVisits / _visits stats)
 
 exploit :: Stats -> Float
 exploit (Stats wins visits) = wins / visits
