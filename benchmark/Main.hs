@@ -42,8 +42,11 @@ go size variedParams = do
   putStrLn ("Varied: " ++ show variedParams)
   putStrLn ("Default: " ++ show defaultParams)
   results1 <- forM [1 .. 50] (const (app varied def))
+  putStr "Varied as Maker, Default as Breaker: "
+  print $ frequency results1
   results2 <- forM [1 .. 50] (const (app def varied))
-  print $ frequency [results1 ++ results2]
+  putStr "Default as Maker, Varied as Breaker: "
+  print $ frequency results2
   putStrLn ""
  where
   app    = playToEnd False (hamiltonicity size 1)
