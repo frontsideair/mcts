@@ -22,7 +22,7 @@ complete n = (uncoloredEdges, makerColored, winningPaths, graphSize)
   uncoloredEdges = S.fromList [ edge u v | u <- [1 .. n], v <- [u + 1 .. n] ]
   makerColored   = S.empty
   winningPaths   = cycles n
-  graphSize = n
+  graphSize      = n
 
 rotate :: [a] -> [a]
 rotate xs = take (length xs) $ (tail . cycle) xs
@@ -42,15 +42,15 @@ winningPaths :: Graph -> Set (Set Edge)
 winningPaths (_, _, winningPaths, graphSize) = winningPaths
 
 colorMaker :: Edge -> Graph -> Graph
-colorMaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths, graphSize) =
-  (uncoloredEdges', makerColored', winningPaths, graphSize)
+colorMaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths, graphSize)
+  = (uncoloredEdges', makerColored', winningPaths, graphSize)
  where
   uncoloredEdges' = S.delete edge uncoloredEdges
   makerColored'   = S.insert edge makerColored
 
 colorBreaker :: Edge -> Graph -> Graph
-colorBreaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths, graphSize) =
-  (uncoloredEdges', makerColored, winningPaths', graphSize)
+colorBreaker edge@(u, v) (uncoloredEdges, makerColored, winningPaths, graphSize)
+  = (uncoloredEdges', makerColored, winningPaths', graphSize)
  where
   uncoloredEdges' = S.delete edge uncoloredEdges
   winningPaths'   = S.filter (S.notMember edge) winningPaths
@@ -60,4 +60,8 @@ edgesToVertices edges = S.fromList $ (S.toList edges) >>= (\(u, v) -> [u, v])
 
 hasHamiltonianCycle :: Graph -> Bool
 hasHamiltonianCycle (_, makerColored, winningPaths, graphSize) =
-  S.size makerColored >= graphSize && S.size (edgesToVertices makerColored) >= graphSize && any (`S.isSubsetOf` makerColored) winningPaths
+  S.size makerColored
+    >= graphSize
+    && S.size (edgesToVertices makerColored)
+    >= graphSize
+    && any (`S.isSubsetOf` makerColored) winningPaths

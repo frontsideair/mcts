@@ -208,5 +208,6 @@ data Params = Params {
 
 mcts :: (Ord m, Eq p) => Params -> AIPlayer g m p
 mcts Params { reuse, iters, constant, robust } = mcts' constant strategy iters
-  where mcts' = if reuse then mctsPlayChanReuse else mctsPlayChan
-        strategy = if robust then robustChild else maxChild
+ where
+  mcts'    = if reuse then mctsPlayChanReuse else mctsPlayChan
+  strategy = if robust then robustChild else maxChild

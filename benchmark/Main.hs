@@ -14,46 +14,50 @@ frequency xs = M.toList (M.fromListWith (+) [ (x, 1) | x <- xs ])
 
 data Options = Options {
   size :: Int,
-  vary :: Vary
+  vary :: Vary,
+  iterations :: Int
 } deriving Show
 
 data Vary = Reuse | Iters | Constant | Robust deriving Show
 
-defaultParams :: Params
-defaultParams =
-  Params { reuse = False, iters = 8000, constant = 0.7, robust = True }
+defaultParams :: Int -> Params
+defaultParams iters =
+  Params { reuse = False, iters = iters, constant = 0.7, robust = True }
 
-variedParams :: Vary -> [Params]
-variedParams Reuse = [ defaultParams { reuse } | reuse <- [False, True] ]
-variedParams Iters =
-  [ defaultParams { iters }
+variedParams :: Params -> Vary -> [Params]
+variedParams fixedParams Reuse =
+  [ fixedParams { reuse } | reuse <- [False, True] ]
+variedParams fixedParams Iters =
+  [ fixedParams { iters }
   | iters <- [1000, 2000, 4000, 8000, 16000, 32000, 64000]
   ]
-variedParams Constant =
-  [ defaultParams { constant } | constant <- [0.1, 0.3, 0.5, 0.7, 0.9] ]
-variedParams Robust = [ defaultParams { robust } | robust <- [True, False] ]
+variedParams fixedParams Constant =
+  [ fixedParams { constant } | constant <- [0.1, 0.3, 0.5, 0.7, 0.9] ]
+variedParams fixedParams Robust =
+  [ fixedParams { robust } | robust <- [True, False] ]
 
 main :: IO ()
 main = do
-  Options { size, vary } <- execParser opts
+  Options { size, vary, iterations } <- execParser opts
   putStrLn ("Graph: " ++ show size)
-  traverse_ (go size) $ variedParams vary
+  let fixedParams = defaultParams iterations
+  traverse_ (go size fixedParams) $ variedParams fixedParams vary
 
-go :: Int -> Params -> IO ()
-go size variedParams = do
+go :: Int -> Params -> Params -> IO ()
+go size fixedParams variedParams = do
   putStrLn ("Varied: " ++ show variedParams)
-  putStrLn ("Default: " ++ show defaultParams)
-  results1 <- forM [1 .. 50] (const (app varied def))
+  putStrLn ("Default: " ++ show fixedParams)
+  results1 <- forM [1 .. 50] (const (app varied fixed))
   putStr "Varied as Maker, Default as Breaker: "
   print $ frequency results1
-  results2 <- forM [1 .. 50] (const (app def varied))
+  results2 <- forM [1 .. 50] (const (app fixed varied))
   putStr "Default as Maker, Varied as Breaker: "
   print $ frequency results2
   putStrLn ""
  where
   app    = playToEnd False (hamiltonicity size 1)
   varied = mcts variedParams
-  def    = mcts defaultParams
+  fixed  = mcts fixedParams
 
 
 opts :: ParserInfo Options
@@ -75,3 +79,12 @@ opts = info (parser <**> helper) mempty
           <|> flag' Constant (long "constant")
           <|> flag' Robust   (long "robust")
           )
+      <*> option
+            auto
+            (  long "iters"
+            <> short 'i'
+            <> help "Number of iterations for fixed player"
+            <> showDefault
+            <> value 8000
+            <> metavar "INT"
+            )
