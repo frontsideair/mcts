@@ -7,6 +7,7 @@ import           Data.Maybe                     ( isJust )
 import           Data.Graph                     ( Graph
                                                 , Edge
                                                 , complete
+                                                , oneCycleRemoved
                                                 , uncoloredEdges
                                                 , colorMaker
                                                 , colorBreaker
@@ -57,11 +58,12 @@ result' (Hamiltonicity board _)
 legalMoves' game@(Hamiltonicity board _) =
   if isTerminal game then [] else emptyPositions board
 
-hamiltonicity :: Int -> Int -> Game Hamiltonicity HMove HPlayer
-hamiltonicity n breakerMoves = Game
-  { initialGame = Hamiltonicity (complete n) MakerTurn
+hamiltonicity :: Int -> Int -> Bool -> Game Hamiltonicity HMove HPlayer
+hamiltonicity n breakerMoves removeCycle = Game
+  { initialGame = Hamiltonicity (graph n) MakerTurn
   , legalMoves  = legalMoves'
   , turn        = turnToPlayer . _turn
   , play        = play' breakerMoves
   , result      = result'
   }
+  where graph = if removeCycle then oneCycleRemoved else complete

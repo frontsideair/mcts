@@ -15,14 +15,15 @@ frequency xs = M.toList (M.fromListWith (+) [ (x, 1) | x <- xs ])
 data Options = Options {
   size :: Int,
   vary :: Vary,
-  iterations :: Int
+  iterations :: Int,
+  removeCycle :: Bool
 } deriving Show
 
 data Vary = Reuse | Iters | Constant | Robust deriving Show
 
 defaultParams :: Int -> Params
 defaultParams iters =
-  Params { reuse = False, iters = iters, constant = 0.7, robust = True }
+  Params { reuse = False, iters, constant = 0.7, robust = True }
 
 variedParams :: Params -> Vary -> [Params]
 variedParams fixedParams Reuse =
@@ -38,13 +39,13 @@ variedParams fixedParams Robust =
 
 main :: IO ()
 main = do
-  Options { size, vary, iterations } <- execParser opts
+  Options { size, vary, iterations, removeCycle } <- execParser opts
   putStrLn ("Graph: " ++ show size)
   let fixedParams = defaultParams iterations
-  traverse_ (go size fixedParams) $ variedParams fixedParams vary
+  traverse_ (go size removeCycle fixedParams) $ variedParams fixedParams vary
 
-go :: Int -> Params -> Params -> IO ()
-go size fixedParams variedParams = do
+go :: Int -> Bool -> Params -> Params -> IO ()
+go size removeCycle fixedParams variedParams = do
   putStrLn ("Varied: " ++ show variedParams)
   putStrLn ("Default: " ++ show fixedParams)
   results1 <- forM [1 .. 50] (const (app varied fixed))
@@ -55,7 +56,7 @@ go size fixedParams variedParams = do
   print $ frequency results2
   putStrLn ""
  where
-  app    = playToEnd False (hamiltonicity size 1)
+  app    = playToEnd False (hamiltonicity size 1 removeCycle)
   varied = mcts variedParams
   fixed  = mcts fixedParams
 
@@ -81,10 +82,11 @@ opts = info (parser <**> helper) mempty
           )
       <*> option
             auto
-            (  long "iters"
+            (  long "iterations"
             <> short 'i'
             <> help "Number of iterations for fixed player"
             <> showDefault
             <> value 8000
             <> metavar "INT"
             )
+      <*> switch (long "remove-cycle" <> short 'r' <> help "Remove one cycle")

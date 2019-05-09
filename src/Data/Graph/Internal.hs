@@ -24,6 +24,17 @@ complete n = (uncoloredEdges, makerColored, winningPaths, graphSize)
   winningPaths   = cycles n
   graphSize      = n
 
+oneCycleRemoved :: Int -> Graph
+oneCycleRemoved n = (uncoloredEdges', makerColored, winningPaths', graphSize)
+ where
+  cycle           = S.fromList $ zipWith edge [1 .. n] $ rotate [1 .. n]
+  uncoloredEdges  = S.fromList [ edge u v | u <- [1 .. n], v <- [u + 1 .. n] ]
+  uncoloredEdges' = S.difference uncoloredEdges cycle
+  makerColored    = S.empty
+  winningPaths    = cycles n
+  winningPaths'   = S.filter (S.disjoint cycle) winningPaths
+  graphSize       = n
+
 rotate :: [a] -> [a]
 rotate xs = take (length xs) $ (tail . cycle) xs
 

@@ -26,7 +26,7 @@ main = do
     execParser opts
   result <- playToEnd
     True
-    (hamiltonicity size 1) -- ticTacToe
+    (hamiltonicity size 1 False) -- ticTacToe
     (mcts (defaultParams { reuse = makerReuse, iters = makerIters })) -- minimaxChan
     (mcts (defaultParams { reuse = breakerReuse, iters = breakerIters })) -- minimaxChan
   print result
