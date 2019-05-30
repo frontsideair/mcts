@@ -1,0 +1,129 @@
+Graph: 8
+Varied: Params {reuse = False, iters = 1000, constant = 0.1, robust = True}
+Default: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 1000, constant = 0.3, robust = True}
+Default: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 1000, constant = 0.5, robust = True}
+Default: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Default: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 1000, constant = 0.9, robust = True}
+Default: Params {reuse = False, iters = 1000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Graph: 8
+Varied: Params {reuse = False, iters = 2000, constant = 0.1, robust = True}
+Default: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 2000, constant = 0.3, robust = True}
+Default: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 2000, constant = 0.5, robust = True}
+Default: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Default: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 2000, constant = 0.9, robust = True}
+Default: Params {reuse = False, iters = 2000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Graph: 8
+Varied: Params {reuse = False, iters = 4000, constant = 0.1, robust = True}
+Default: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 4000, constant = 0.3, robust = True}
+Default: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 4000, constant = 0.5, robust = True}
+Default: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Default: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 4000, constant = 0.9, robust = True}
+Default: Params {reuse = False, iters = 4000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Graph: 8
+Varied: Params {reuse = False, iters = 8000, constant = 0.1, robust = True}
+Default: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 8000, constant = 0.3, robust = True}
+Default: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 8000, constant = 0.5, robust = True}
+Default: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Default: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 8000, constant = 0.9, robust = True}
+Default: Params {reuse = False, iters = 8000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Graph: 8
+Varied: Params {reuse = False, iters = 16000, constant = 0.1, robust = True}
+Default: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 16000, constant = 0.3, robust = True}
+Default: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 16000, constant = 0.5, robust = True}
+Default: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Default: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
+
+Varied: Params {reuse = False, iters = 16000, constant = 0.9, robust = True}
+Default: Params {reuse = False, iters = 16000, constant = 0.7, robust = True}
+Varied as Maker, Default as Breaker: [(Win Breaker,50)]
+Default as Maker, Varied as Breaker: [(Win Breaker,50)]
