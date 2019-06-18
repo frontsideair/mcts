@@ -13,7 +13,8 @@ data Options = Options {
   makerReuse :: Bool,
   breakerReuse :: Bool,
   makerIters :: Int,
-  breakerIters :: Int
+  breakerIters :: Int,
+  removeCycle :: Bool
 } deriving Show
 
 defaultParams :: Params
@@ -22,11 +23,11 @@ defaultParams =
 
 main :: IO ()
 main = do
-  Options { size, makerReuse, breakerReuse, makerIters, breakerIters } <-
+  Options { size, makerReuse, breakerReuse, makerIters, breakerIters, removeCycle } <-
     execParser opts
   result <- playToEnd
     True
-    (hamiltonicity size 1 False) -- ticTacToe
+    (hamiltonicity size 1 removeCycle) -- ticTacToe
     (mcts (defaultParams { reuse = makerReuse, iters = makerIters })) -- minimaxChan
     (mcts (defaultParams { reuse = breakerReuse, iters = breakerIters })) -- minimaxChan
   print result
@@ -63,3 +64,4 @@ opts = info (parser <**> helper) mempty
             <> value 1000
             <> metavar "INT"
             )
+      <*> switch (long "remove-cycle" <> help "One cycle removed")
